@@ -1,0 +1,14 @@
+FROM golang:alpine AS builder
+
+RUN apk add --no-cache build-base
+COPY . /src
+RUN cd /src && CGO_ENABLED=0 go build -o /exercisediary-api ./cmd/api
+
+FROM scratch
+
+WORKDIR /data/ExerciseDiary
+WORKDIR /app
+
+COPY --from=builder /exercisediary-api /app/
+
+ENTRYPOINT ["./exercisediary-api"]
