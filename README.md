@@ -52,47 +52,44 @@ docker run --name exdiary-api \
 
 # Start the web frontend
 docker run --name exdiary-frontend \
+  -e API_URL=http://<YOUR_HOST_IP>:8851 \
   -p 8080:8080 \
-  ghcr.io/rwlove/exercisediary-frontend \
-  -a http://<YOUR_HOST_IP>:8851
+  ghcr.io/rwlove/exercisediary-frontend
 ```
 
 Then open **http://localhost:8080** in your browser.
 
 ## Configuration
 
-Configuration is read from `config.yaml` or environment variables on the **API** server.
+Both services are configured exclusively via environment variables. No config file is required.
+
+### API server (`exercisediary-api`)
 
 | Variable | Description | Default |
 |---|---|---|
-| `AUTH` | Enable session-cookie authentication | `false` |
-| `AUTH_EXPIRE` | Session expiration: number + suffix `m`, `h`, `d`, or `M` | `7d` |
-| `AUTH_USER` | Username | `""` |
-| `AUTH_PASSWORD` | bcrypt-hashed password — [how to generate](docs/BCRYPT.md) | `""` |
+| `PORT` | Listen port | `8851` |
 | `HOST` | Listen address | `0.0.0.0` |
-| `PORT` | API listen port | `8851` |
-| `THEME` | Any [Bootswatch](https://bootswatch.com) theme name (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
+| `DATA_DIR` | SQLite data directory (also settable via `-d` flag) | `/data/ExerciseDiary` |
+| `API_KEY` | Require this value on every `X-Api-Key` request header; empty = no auth | `""` |
+| `THEME` | Any [Bootswatch](https://bootswatch.com) theme (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
 | `COLOR` | Background: `light` or `dark` | `light` |
 | `HEATCOLOR` | Heatmap cell color | `#03a70c` |
 | `PAGESTEP` | Rows per page | `10` |
-| `TZ` | Timezone (required for correct date display) | `""` |
+| `AUTH` | Enable session-cookie authentication | `false` |
+| `AUTH_USER` | Username | `""` |
+| `AUTH_PASSWORD` | bcrypt-hashed password — [how to generate](docs/BCRYPT.md) | `""` |
+| `AUTH_EXPIRE` | Session expiration: number + suffix `m`, `h`, `d`, or `M` | `7d` |
+| `TZ` | Timezone | `""` |
 
-## API server options
+### Frontend server (`exercisediary-frontend`)
 
-| Flag | Description | Default |
+| Variable | Description | Default |
 |---|---|---|
-| `-d` | Path to data/config directory | `/data/ExerciseDiary` |
-| `-p` | Port to listen on | `8851` |
-| `-k` | API key required on `X-Api-Key` header (empty = no auth) | `""` |
-
-## Frontend options
-
-| Flag | Description | Default |
-|---|---|---|
-| `-a` | Base URL of the API server | `http://localhost:8851` |
-| `-p` | Port to listen on | `8080` |
-| `-k` | API key sent to the API server | `""` |
-| `-n` | Path to local node_modules ([node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap)) | `""` |
+| `PORT` | Listen port | `8080` |
+| `API_URL` | Base URL of the API server | `http://localhost:8851` |
+| `API_KEY` | `X-Api-Key` value sent to the API (must match API server `API_KEY`) | `""` |
+| `NODE_PATH` | URL of a [node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) instance for offline use | `""` |
+| `TZ` | Timezone | `""` |
 
 ## Local network only
 
@@ -112,6 +109,16 @@ docker run --name exdiary-frontend \
 ```
 
 Or use [docker-compose-local.yml](docker-compose-local.yml) to build both images from source.
+
+Set `NODE_PATH` on the frontend to point at the node-bootstrap instance:
+
+```sh
+docker run --name exdiary-frontend \
+  -e API_URL=http://<YOUR_HOST_IP>:8851 \
+  -e NODE_PATH=http://<YOUR_HOST_IP>:8850 \
+  -p 8080:8080 \
+  ghcr.io/rwlove/exercisediary-frontend
+```
 
 ## Thanks
 
