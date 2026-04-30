@@ -5,6 +5,7 @@ import (
 
 	"github.com/aceberg/ExerciseDiary/internal/auth"
 	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/aceberg/ExerciseDiary/internal/store"
 )
 
 var (
@@ -16,6 +17,14 @@ var (
 
 	// Exercise data
 	exData models.AllExData
+
+	// dataStore is the active data source.
+	// SQLiteStore in monolith mode, APIClient in split-frontend mode.
+	dataStore store.Store
+
+	// apiClient is non-nil only in split-frontend mode; used for config
+	// operations that fall outside the Store interface.
+	apiClient *store.APIClient
 )
 
 // templFS - html templates

@@ -1,7 +1,6 @@
 package web
 
 import (
-	// "log"
 	"strconv"
 	"time"
 
@@ -18,24 +17,27 @@ type HeatMapResult struct {
 type WorkoutData struct {
 	Colors      []string
 	Names       []string
-	Intensities []int    // Intensity values for each workout
-	Weights     []string // Weight values for each workout (as strings to preserve decimal format)
-	Reps        []int    // Reps for each workout
+	Intensities []int
+	Weights     []string
+	Reps        []int
 }
 
-func generateHeatMap() HeatMapResult {
+// generateHeatMap builds both heatmaps from the provided sets slice.
+// Accepting sets as a parameter (instead of reading exData directly) keeps this
+// function pure and compatible with both monolith and split-frontend modes.
+func generateHeatMap(sets []models.Set) HeatMapResult {
 	var intensityMap []models.HeatMapData
 	var colorMap []models.HeatMapData
 	var heat models.HeatMapData
 
-	w := 52 // weeks to show
+	w := 52
 
 	max := time.Now()
 	min := max.AddDate(0, 0, -7*w)
 
 	startDate := weekStartDate(min)
-	countMap := countHeat()
-	workoutData := getWorkoutData()
+	countMap := countHeat(sets)
+	workoutData := getWorkoutData(sets)
 
 	dow := []string{"Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"}
 
@@ -46,11 +48,9 @@ func generateHeatMap() HeatMapResult {
 			heat.X = strconv.Itoa(i)
 			heat.D = startDate.AddDate(0, 0, 7*i).Format("2006-01-02")
 
-			// Add to intensity map
 			heat.V = countMap[heat.D]
 			intensityMap = append(intensityMap, heat)
 
-			// Add to color map with all workout colors and names
 			if data, exists := workoutData[heat.D]; exists {
 				heat.V = len(data.Colors)
 				heat.Colors = data.Colors
@@ -60,7 +60,6 @@ func generateHeatMap() HeatMapResult {
 				heat.WorkoutReps = data.Reps
 				colorMap = append(colorMap, heat)
 			} else {
-				// Always add the cell to the color map, even without workouts
 				heat.V = 0
 				heat.Colors = []string{}
 				heat.WorkoutNames = []string{}
@@ -86,42 +85,37 @@ func weekStartDate(date time.Time) time.Time {
 	return result
 }
 
-func countHeat() map[string]int {
+func countHeat(sets []models.Set) map[string]int {
 	countMap := make(map[string]int)
-
-	for _, ex := range exData.Sets {
-		// Default intensity is 0, hence add 1 for basic heatmap
+	for _, ex := range sets {
 		countMap[ex.Date] += ex.Intensity + 1
 	}
-
 	return countMap
 }
 
-func getWorkoutData() map[string]WorkoutData {
+func getWorkoutData(sets []models.Set) map[string]WorkoutData {
 	workoutMap := make(map[string]WorkoutData)
-
-	for _, set := range exData.Sets {
+	for _, set := range sets {
 		date := set.Date
-		if set.WorkoutColor != "" {
-			if _, exists := workoutMap[date]; !exists {
-				workoutMap[date] = WorkoutData{
-					Colors:      []string{},
-					Names:       []string{},
-					Intensities: []int{},
-					Weights:     []string{},
-					Reps:        []int{},
-				}
-			}
-
-			data := workoutMap[date]
-			data.Colors = append(data.Colors, set.WorkoutColor)
-			data.Names = append(data.Names, set.Name)
-			data.Intensities = append(data.Intensities, set.Intensity)
-			data.Weights = append(data.Weights, set.Weight.String())
-			data.Reps = append(data.Reps, set.Reps)
-			workoutMap[date] = data
+		if set.WorkoutColor == "" {
+			continue
 		}
+		if _, exists := workoutMap[date]; !exists {
+			workoutMap[date] = WorkoutData{
+				Colors:      []string{},
+				Names:       []string{},
+				Intensities: []int{},
+				Weights:     []string{},
+				Reps:        []int{},
+			}
+		}
+		data := workoutMap[date]
+		data.Colors = append(data.Colors, set.WorkoutColor)
+		data.Names = append(data.Names, set.Name)
+		data.Intensities = append(data.Intensities, set.Intensity)
+		data.Weights = append(data.Weights, set.Weight.String())
+		data.Reps = append(data.Reps, set.Reps)
+		workoutMap[date] = data
 	}
-
 	return workoutMap
 }

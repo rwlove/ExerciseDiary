@@ -1,7 +1,7 @@
 package web
 
 import (
-	// "log"
+	"log"
 	"net/http"
 	"sort"
 	"strconv"
@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 
-	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/models"
 )
 
@@ -17,11 +16,13 @@ func addWeightHandler(c *gin.Context) {
 	var w models.BodyWeight
 
 	w.Date = c.PostForm("date")
-	weightStr := c.PostForm("weight")
+	w.Weight, _ = decimal.NewFromString(c.PostForm("weight"))
 
-	w.Weight, _ = decimal.NewFromString(weightStr)
-
-	db.InsertW(appConfig.DBPath, w)
+	if err := dataStore.InsertW(w); err != nil {
+		log.Println("ERROR addWeightHandler InsertW:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.Redirect(http.StatusFound, c.Request.Header["Referer"][0])
 }
@@ -29,17 +30,24 @@ func addWeightHandler(c *gin.Context) {
 func weightHandler(c *gin.Context) {
 	var guiData models.GuiData
 
-	idStr, ok := c.GetQuery("del")
-	if ok {
+	if idStr, ok := c.GetQuery("del"); ok {
 		id, _ := strconv.Atoi(idStr)
-		db.DeleteW(appConfig.DBPath, id)
+		if err := dataStore.DeleteW(id); err != nil {
+			log.Println("ERROR weightHandler DeleteW:", err)
+		}
 	}
-	exData.Weight = db.SelectW(appConfig.DBPath)
+
+	weights, err := dataStore.SelectW()
+	if err != nil {
+		log.Println("ERROR weightHandler SelectW:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	exData.Weight = weights
 
 	guiData.Config = appConfig
 	guiData.ExData = exData
 
-	// Sort weight by Date
 	sort.Slice(guiData.ExData.Weight, func(i, j int) bool {
 		return guiData.ExData.Weight[i].Date < guiData.ExData.Weight[j].Date
 	})

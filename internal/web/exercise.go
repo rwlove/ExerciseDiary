@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 
-	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/models"
 )
 
@@ -16,18 +15,21 @@ func exerciseHandler(c *gin.Context) {
 	var guiData models.GuiData
 	var id int
 
-	exData.Exs = db.SelectEx(appConfig.DBPath)
+	exs, err := dataStore.SelectEx()
+	if err != nil {
+		log.Println("ERROR exerciseHandler SelectEx:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+	exData.Exs = exs
 
 	guiData.Config = appConfig
 	guiData.ExData = exData
 	guiData.GroupMap = createGroupMap()
 
 	idStr, ok := c.GetQuery("id")
-	// log.Println("ID =", idStr)
-
-	if ok && (idStr != "new") {
+	if ok && idStr != "new" {
 		id, _ = strconv.Atoi(idStr)
-
 		for _, oneEx := range exData.Exs {
 			if oneEx.ID == id {
 				guiData.OneEx = oneEx
@@ -50,35 +52,40 @@ func saveExerciseHandler(c *gin.Context) {
 	oneEx.Image = c.PostForm("image")
 	oneEx.Color = c.PostForm("color")
 
-	id := c.PostForm("id")
-	weight := c.PostForm("weight")
-	reps := c.PostForm("reps")
-	intensity := c.PostForm("intensity")
-
-	oneEx.ID, _ = strconv.Atoi(id)
-	oneEx.Weight, _ = decimal.NewFromString(weight)
-	oneEx.Reps, _ = strconv.Atoi(reps)
-	oneEx.Intensity, _ = strconv.Atoi(intensity)
+	oneEx.ID, _ = strconv.Atoi(c.PostForm("id"))
+	oneEx.Weight, _ = decimal.NewFromString(c.PostForm("weight"))
+	oneEx.Reps, _ = strconv.Atoi(c.PostForm("reps"))
+	oneEx.Intensity, _ = strconv.Atoi(c.PostForm("intensity"))
 
 	log.Println("ONEEX =", oneEx)
 
+	// Upsert: delete the old record first (ID=0 means new exercise, skip delete)
 	if oneEx.ID != 0 {
-		db.DeleteEx(appConfig.DBPath, oneEx.ID)
+		if err := dataStore.DeleteEx(oneEx.ID); err != nil {
+			log.Println("ERROR saveExerciseHandler DeleteEx:", err)
+		}
+		// Clear ID so the store inserts a new row (SQLite auto-increment);
+		// for the API client InsertEx with ID!=0 does a PUT instead.
+		// We keep ID here so APIClient.InsertEx routes to PUT /api/exercises/:id.
 	}
 
-	db.InsertEx(appConfig.DBPath, oneEx)
-	exData.Exs = db.SelectEx(appConfig.DBPath)
+	if err := dataStore.InsertEx(oneEx); err != nil {
+		log.Println("ERROR saveExerciseHandler InsertEx:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.Redirect(http.StatusFound, "/")
 }
 
 func deleteExerciseHandler(c *gin.Context) {
+	id, _ := strconv.Atoi(c.PostForm("id"))
 
-	idStr := c.PostForm("id")
-	id, _ := strconv.Atoi(idStr)
-
-	db.DeleteEx(appConfig.DBPath, id)
-	exData.Exs = db.SelectEx(appConfig.DBPath)
+	if err := dataStore.DeleteEx(id); err != nil {
+		log.Println("ERROR deleteExerciseHandler:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 
 	c.Redirect(http.StatusFound, "/")
 }
