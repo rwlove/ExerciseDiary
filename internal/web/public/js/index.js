@@ -1,5 +1,32 @@
 var id = 0;
 var today = null;
+var _saveTimer = null;
+
+function saveWorkout() {
+    var form = document.forms['sets'];
+    if (!form) return;
+    var status = document.getElementById('saveStatus');
+    if (status) { status.className = 'save-status saving'; status.textContent = 'Saving…'; }
+    var data = new FormData(form);
+    fetch('/set/', { method: 'POST', body: data })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            if (status) { status.className = 'save-status saved'; status.textContent = 'Saved'; }
+            setTimeout(function() {
+                if (status && status.className === 'save-status saved') {
+                    status.className = 'save-status'; status.textContent = '';
+                }
+            }, 2000);
+        })
+        .catch(function() {
+            if (status) { status.className = 'save-status error'; status.textContent = 'Error saving'; }
+        });
+}
+
+function scheduleAutosave() {
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveWorkout, 600);
+}
 
 function addExercise(name, weight, reps, intensity, color) {
     id++;
@@ -32,17 +59,30 @@ function addExercise(name, weight, reps, intensity, color) {
         </div>
     `;
 
-    // Wire up color picker → color strip live update
+    // Wire up color picker → color strip live update + autosave
     var strip = entry.querySelector('.entry-color-strip');
     var colorPicker = entry.querySelector('.entry-color-picker');
     colorPicker.addEventListener('input', function() {
         strip.style.backgroundColor = this.value;
+        scheduleAutosave();
     });
-    // Remove the inline oninput we set above (cleaner)
     colorPicker.removeAttribute('oninput');
+
+    // Wire intensity input → autosave
+    entry.querySelector('.entry-intensity').addEventListener('change', scheduleAutosave);
+
+    // Wire delete button → autosave
+    entry.querySelector('.entry-del-btn').addEventListener('click', function() {
+        entry.remove();
+        updateEmptyState();
+        scheduleAutosave();
+    });
+    // Remove inline onclick so the event listener handles it
+    entry.querySelector('.entry-del-btn').removeAttribute('onclick');
 
     container.appendChild(entry);
     updateEmptyState();
+    scheduleAutosave();
 }
 
 function updateEmptyState() {

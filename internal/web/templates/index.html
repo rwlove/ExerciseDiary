@@ -194,6 +194,7 @@
       <div class="panel">
         <div class="panel-header">
           <span class="panel-title">Today's Workout</span>
+          <span class="save-status" id="saveStatus"></span>
         </div>
         <form action="/set/" method="post" name="sets">
           <input name="date" type="hidden" id="formDate">
@@ -203,11 +204,6 @@
               <div class="empty-icon"><i class="bi bi-dumbbell"></i></div>
               <p>Tap an exercise on the left to add it here</p>
             </div>
-          </div>
-          <div class="panel-footer">
-            <button type="submit" class="btn btn-primary w-100 rounded-3">
-              <i class="bi bi-check2-circle me-2"></i>Save Workout
-            </button>
           </div>
         </form>
       </div>

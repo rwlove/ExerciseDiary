@@ -1,9 +1,7 @@
-[![Publish Container Images](https://github.com/rwlove/WorkoutDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/WorkoutDiary/actions/workflows/container-publish.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aceberg/workoutdiary)](https://goreportcard.com/report/github.com/aceberg/workoutdiary)
+[![Publish Container Images](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rwlove/WorkoutDiary)](https://goreportcard.com/report/github.com/rwlove/WorkoutDiary)
 
-<h1><a href="https://github.com/rwlove/WorkoutDiary">
-    <img src="https://raw.githubusercontent.com/aceberg/workoutdiary/main/assets/logo.png" width="35" />
-</a>Workout Diary</h1>
+<h1>Workout Diary</h1>
 
 Workout diary with GitHub-style year visualization. Log daily sets, track body weight, and visualize training history with intensity heatmaps.
 
@@ -14,8 +12,6 @@ Workout diary with GitHub-style year visualization. Log daily sets, track body w
 - [Frontend options](#frontend-options)
 - [Local network only](#local-network-only)
 - [Thanks](#thanks)
-
-![Screenshot](assets/Screenshot.png)
 
 ## Architecture
 
@@ -72,13 +68,9 @@ Both services are configured exclusively via environment variables. No config fi
 | `DATA_DIR` | SQLite data directory (also settable via `-d` flag) | `/data/WorkoutDiary` |
 | `API_KEY` | Require this value on every `X-Api-Key` request header; empty = no auth | `""` |
 | `THEME` | Any [Bootswatch](https://bootswatch.com) theme (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
-| `COLOR` | Background: `light` or `dark` | `light` |
+| `COLOR` | Background: `light` or `dark` | `dark` |
 | `HEATCOLOR` | Heatmap cell color | `#03a70c` |
 | `PAGESTEP` | Rows per page | `10` |
-| `AUTH` | Enable session-cookie authentication | `false` |
-| `AUTH_USER` | Username | `""` |
-| `AUTH_PASSWORD` | bcrypt-hashed password — [how to generate](docs/BCRYPT.md) | `""` |
-| `AUTH_EXPIRE` | Session expiration: number + suffix `m`, `h`, `d`, or `M` | `7d` |
 | `TZ` | Timezone | `""` |
 
 ### Frontend server (`workoutdiary-frontend`)
@@ -93,7 +85,7 @@ Both services are configured exclusively via environment variables. No config fi
 
 ## Local network only
 
-By default the app loads themes, icons, and fonts from the internet. For an air-gapped setup, run the [node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) sidecar and pass its URL to the frontend via `-n`:
+By default the app loads themes, icons, and fonts from the internet. For an air-gapped setup, run the [node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) sidecar and set `NODE_PATH` on the frontend:
 
 ```sh
 docker run --name node-bootstrap \
@@ -102,27 +94,26 @@ docker run --name node-bootstrap \
   aceberg/node-bootstrap
 
 docker run --name exdiary-frontend \
-  -p 8080:8080 \
-  ghcr.io/rwlove/workoutdiary-frontend \
-  -a http://<YOUR_HOST_IP>:8851 \
-  -n http://<YOUR_HOST_IP>:8850
-```
-
-Or use [docker-compose-local.yml](docker-compose-local.yml) to build both images from source.
-
-Set `NODE_PATH` on the frontend to point at the node-bootstrap instance:
-
-```sh
-docker run --name exdiary-frontend \
   -e API_URL=http://<YOUR_HOST_IP>:8851 \
   -e NODE_PATH=http://<YOUR_HOST_IP>:8850 \
   -p 8080:8080 \
   ghcr.io/rwlove/workoutdiary-frontend
 ```
 
+## Features
+
+- **Exercise library** — organize exercises into groups, store default weight/reps/intensity
+- **Daily workout log** — autosaves on every change (no Save button)
+- **Body weight tracking** — log weight and view a rolling chart
+- **Heatmap history** — GitHub-style workout intensity and per-exercise color heatmaps
+- **Stats page** — per-exercise intensity charts with period filtering
+- **Dark mode by default** — full Bootstrap dark theme
+- **PWA support** — installable as a home screen app
+
 ## Thanks
 
-- All Go packages listed in [dependencies](https://github.com/aceberg/workoutdiary/network/dependencies)
+- All Go packages listed in [go.mod](go.mod)
 - [Bootstrap](https://getbootstrap.com/) and [Bootswatch](https://bootswatch.com) themes
 - [Chart.js](https://github.com/chartjs/Chart.js) and [chartjs-chart-matrix](https://github.com/kurkle/chartjs-chart-matrix)
+- [Gin](https://github.com/gin-gonic/gin)
 - Favicon and logo: [Flaticon](https://www.flaticon.com/icons/)
