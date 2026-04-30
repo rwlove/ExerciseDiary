@@ -1,8 +1,8 @@
 package store
 
 import (
-	"github.com/aceberg/ExerciseDiary/internal/db"
-	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/db"
+	"github.com/rwlove/WorkoutDiary/internal/models"
 )
 
 // SQLiteStore implements Store using the local SQLite database.

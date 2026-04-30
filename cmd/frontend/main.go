@@ -5,8 +5,8 @@ import (
 
 	_ "time/tzdata"
 
-	"github.com/aceberg/ExerciseDiary/internal/store"
-	"github.com/aceberg/ExerciseDiary/internal/web"
+	"github.com/rwlove/WorkoutDiary/internal/store"
+	"github.com/rwlove/WorkoutDiary/internal/web"
 )
 
 func envOr(key, fallback string) string {

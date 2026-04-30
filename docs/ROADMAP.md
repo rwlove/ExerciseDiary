@@ -19,10 +19,10 @@
 
 ## MAYBE
 
-- [ ] Weight field take decimals [#4](https://github.com/aceberg/ExerciseDiary/issues/4)
+- [ ] Weight field take decimals [#4](https://github.com/rwlove/WorkoutDiary/issues/4)
 
 ## NOT DOING
 
-- Sets [#1](https://github.com/aceberg/ExerciseDiary/issues/1)
+- Sets [#1](https://github.com/rwlove/WorkoutDiary/issues/1)
 - Sync or import from other apps
 - Running map or other things for running

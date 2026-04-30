@@ -7,10 +7,10 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/models"
 )
 
-// APIClient implements Store by calling the ExerciseDiary JSON API.
+// APIClient implements Store by calling the WorkoutDiary JSON API.
 // It adds an optional API key on every request via the X-Api-Key header.
 type APIClient struct {
 	baseURL string

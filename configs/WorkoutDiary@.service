@@ -1,0 +1,12 @@
+[Unit]
+Description=WorkoutDiary
+Documentation=https://github.com/rwlove/WorkoutDiary
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/home/pi/workplace/exercisedaily_dev/WorkoutDiary/WorkoutDiary /home/pi/workplace/exercisedaily_dev/WorkoutDiary/exercise_data
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

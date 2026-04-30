@@ -1,0 +1,12 @@
+[Unit]
+Description=WorkoutDiary
+Documentation=https://github.com/rwlove/WorkoutDiary
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/workoutdiary -d /etc/WorkoutDiary/
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

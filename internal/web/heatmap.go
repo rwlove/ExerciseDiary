@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/models"
 )
 
 // HeatMapResult contains both intensity and color heatmaps

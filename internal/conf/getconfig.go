@@ -3,8 +3,8 @@ package conf
 import (
 	"github.com/spf13/viper"
 
-	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/auth"
+	"github.com/rwlove/WorkoutDiary/internal/models"
 )
 
 // GetFromEnv reads all configuration from environment variables only.

@@ -1,9 +1,9 @@
-[![Publish Container Images](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aceberg/exercisediary)](https://goreportcard.com/report/github.com/aceberg/exercisediary)
+[![Publish Container Images](https://github.com/rwlove/WorkoutDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/WorkoutDiary/actions/workflows/container-publish.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/aceberg/workoutdiary)](https://goreportcard.com/report/github.com/aceberg/workoutdiary)
 
-<h1><a href="https://github.com/rwlove/ExerciseDiary">
-    <img src="https://raw.githubusercontent.com/aceberg/exercisediary/main/assets/logo.png" width="35" />
-</a>Exercise Diary</h1>
+<h1><a href="https://github.com/rwlove/WorkoutDiary">
+    <img src="https://raw.githubusercontent.com/aceberg/workoutdiary/main/assets/logo.png" width="35" />
+</a>Workout Diary</h1>
 
 Workout diary with GitHub-style year visualization. Log daily sets, track body weight, and visualize training history with intensity heatmaps.
 
@@ -19,11 +19,11 @@ Workout diary with GitHub-style year visualization. Log daily sets, track body w
 
 ## Architecture
 
-Exercise Diary runs as two independent services:
+Workout Diary runs as two independent services:
 
 ```
 ┌──────────────────────────┐        ┌──────────────────────────┐
-│  exercisediary-frontend  │─HTTP──▶│  exercisediary-api       │
+│  workoutdiary-frontend  │─HTTP──▶│  workoutdiary-api       │
 │  Web UI  (default :8080) │        │  JSON API  (default :8851│
 └──────────────────────────┘        └───────────┬──────────────┘
                                                  │
@@ -32,8 +32,8 @@ Exercise Diary runs as two independent services:
 
 | Service | Image | Description |
 |---|---|---|
-| API backend | `ghcr.io/rwlove/exercisediary-api` | Owns the SQLite database, exposes a JSON REST API |
-| Web frontend | `ghcr.io/rwlove/exercisediary-frontend` | Serves the browser UI, talks to the API over HTTP |
+| API backend | `ghcr.io/rwlove/workoutdiary-api` | Owns the SQLite database, exposes a JSON REST API |
+| Web frontend | `ghcr.io/rwlove/workoutdiary-frontend` | Serves the browser UI, talks to the API over HTTP |
 
 ## Quick start
 
@@ -44,17 +44,17 @@ docker compose up
 Or run each service manually:
 
 ```sh
-# Start the API backend (stores data in /data/ExerciseDiary)
+# Start the API backend (stores data in /data/WorkoutDiary)
 docker run --name exdiary-api \
-  -v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
+  -v ~/.dockerdata/WorkoutDiary:/data/WorkoutDiary \
   -p 8851:8851 \
-  ghcr.io/rwlove/exercisediary-api
+  ghcr.io/rwlove/workoutdiary-api
 
 # Start the web frontend
 docker run --name exdiary-frontend \
   -e API_URL=http://<YOUR_HOST_IP>:8851 \
   -p 8080:8080 \
-  ghcr.io/rwlove/exercisediary-frontend
+  ghcr.io/rwlove/workoutdiary-frontend
 ```
 
 Then open **http://localhost:8080** in your browser.
@@ -63,13 +63,13 @@ Then open **http://localhost:8080** in your browser.
 
 Both services are configured exclusively via environment variables. No config file is required.
 
-### API server (`exercisediary-api`)
+### API server (`workoutdiary-api`)
 
 | Variable | Description | Default |
 |---|---|---|
 | `PORT` | Listen port | `8851` |
 | `HOST` | Listen address | `0.0.0.0` |
-| `DATA_DIR` | SQLite data directory (also settable via `-d` flag) | `/data/ExerciseDiary` |
+| `DATA_DIR` | SQLite data directory (also settable via `-d` flag) | `/data/WorkoutDiary` |
 | `API_KEY` | Require this value on every `X-Api-Key` request header; empty = no auth | `""` |
 | `THEME` | Any [Bootswatch](https://bootswatch.com) theme (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
 | `COLOR` | Background: `light` or `dark` | `light` |
@@ -81,7 +81,7 @@ Both services are configured exclusively via environment variables. No config fi
 | `AUTH_EXPIRE` | Session expiration: number + suffix `m`, `h`, `d`, or `M` | `7d` |
 | `TZ` | Timezone | `""` |
 
-### Frontend server (`exercisediary-frontend`)
+### Frontend server (`workoutdiary-frontend`)
 
 | Variable | Description | Default |
 |---|---|---|
@@ -103,7 +103,7 @@ docker run --name node-bootstrap \
 
 docker run --name exdiary-frontend \
   -p 8080:8080 \
-  ghcr.io/rwlove/exercisediary-frontend \
+  ghcr.io/rwlove/workoutdiary-frontend \
   -a http://<YOUR_HOST_IP>:8851 \
   -n http://<YOUR_HOST_IP>:8850
 ```
@@ -117,12 +117,12 @@ docker run --name exdiary-frontend \
   -e API_URL=http://<YOUR_HOST_IP>:8851 \
   -e NODE_PATH=http://<YOUR_HOST_IP>:8850 \
   -p 8080:8080 \
-  ghcr.io/rwlove/exercisediary-frontend
+  ghcr.io/rwlove/workoutdiary-frontend
 ```
 
 ## Thanks
 
-- All Go packages listed in [dependencies](https://github.com/aceberg/exercisediary/network/dependencies)
+- All Go packages listed in [dependencies](https://github.com/aceberg/workoutdiary/network/dependencies)
 - [Bootstrap](https://getbootstrap.com/) and [Bootswatch](https://bootswatch.com) themes
 - [Chart.js](https://github.com/chartjs/Chart.js) and [chartjs-chart-matrix](https://github.com/kurkle/chartjs-chart-matrix)
 - Favicon and logo: [Flaticon](https://www.flaticon.com/icons/)

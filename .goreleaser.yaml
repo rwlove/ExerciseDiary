@@ -1,8 +1,8 @@
-project_name: ExerciseDiary
+project_name: WorkoutDiary
 builds:
   - id: api
     main: ./cmd/api/
-    binary: exercisediary-api
+    binary: workoutdiary-api
     env: [CGO_ENABLED=0]
     goos:
       - linux
@@ -23,7 +23,7 @@ builds:
 
   - id: frontend
     main: ./cmd/frontend/
-    binary: exercisediary-frontend
+    binary: workoutdiary-frontend
     env: [CGO_ENABLED=0]
     goos:
       - linux
@@ -45,7 +45,7 @@ builds:
 nfpms:
   - maintainer: aceberg <aceberg_a@proton.me>
     description: Workout diary with GitHub-style year visualization
-    homepage: https://github.com/aceberg/ExerciseDiary
+    homepage: https://github.com/rwlove/WorkoutDiary
     license: MIT
     section: utils
     formats:
@@ -54,10 +54,10 @@ nfpms:
     - apk
     - termux.deb
     contents:
-    - src: ./configs/exercisediary-api.service
-      dst: /lib/systemd/system/exercisediary-api.service
-    - src: ./configs/exercisediary-frontend.service
-      dst: /lib/systemd/system/exercisediary-frontend.service
+    - src: ./configs/workoutdiary-api.service
+      dst: /lib/systemd/system/workoutdiary-api.service
+    - src: ./configs/workoutdiary-frontend.service
+      dst: /lib/systemd/system/workoutdiary-frontend.service
     scripts:
       postinstall: ./configs/postinstall.sh
 

@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/store"
+	"github.com/rwlove/WorkoutDiary/internal/auth"
+	"github.com/rwlove/WorkoutDiary/internal/store"
 )
 
 // GuiWithStore starts the frontend web server backed by a remote API.

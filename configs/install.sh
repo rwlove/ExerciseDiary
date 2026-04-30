@@ -1,5 +1,5 @@
 #!/bin/sh
 
-cp exercisediary /usr/bin/
-cp ExerciseDiary.service /lib/systemd/system/
-cp ExerciseDiary@.service /lib/systemd/system/
+cp workoutdiary /usr/bin/
+cp WorkoutDiary.service /lib/systemd/system/
+cp WorkoutDiary@.service /lib/systemd/system/
