@@ -5,6 +5,10 @@
 
 Workout diary with GitHub-style year visualization. Log daily sets, track body weight, and visualize training history with intensity heatmaps.
 
+| Workout tab | Trends tab |
+|---|---|
+| ![Workout tab](assets/screenshot-workout.png) | ![Trends tab](assets/screenshot-trends.png) |
+
 - [Architecture](#architecture)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
