@@ -203,6 +203,33 @@ function clearGroup() {
     });
 }
 
+function renderWeekStreak(sets) {
+    var el = document.getElementById('weekStreak');
+    if (!el) return;
+    var today = new Date();
+    var dayLetters = ['S','M','T','W','T','F','S'];
+    var activeCount = 0;
+    var items = [];
+    for (var i = 6; i >= 0; i--) {
+        var d = new Date(today.getFullYear(), today.getMonth(), today.getDate() - i);
+        var dateStr = d.toLocaleDateString('en-CA');
+        var isToday = i === 0;
+        var hasWorkout = sets && sets.some(function(s) { return s.Date === dateStr; });
+        if (hasWorkout) activeCount++;
+        items.push({ label: dayLetters[d.getDay()], active: hasWorkout, today: isToday });
+    }
+    var dotsHtml = items.map(function(item) {
+        var dotCls = 'week-dot' + (item.active ? ' has-workout' : '') + (item.today ? ' is-today' : '');
+        var lblCls = 'week-dot-label' + (item.today ? ' is-today' : '');
+        return '<div class="week-dot-item"><div class="' + dotCls + '"></div><span class="' + lblCls + '">' + item.label + '</span></div>';
+    }).join('');
+    el.innerHTML = '<div class="panel week-streak-panel"><div class="week-streak-inner">' +
+        '<span class="week-streak-title">Last 7 days</span>' +
+        '<div class="week-dots">' + dotsHtml + '</div>' +
+        '<span class="week-streak-count"><strong>' + activeCount + '</strong><span class="week-streak-of"> / 7</span></span>' +
+        '</div></div>';
+}
+
 function filterExercises() {
     var query = document.getElementById('exSearch').value.toLowerCase().trim();
     var gr = window._selectedGroup;
