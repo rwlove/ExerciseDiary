@@ -1,88 +1,121 @@
-[![Main-Docker](https://github.com/aceberg/exercisediary/actions/workflows/main-docker.yml/badge.svg)](https://github.com/aceberg/exercisediary/actions/workflows/main-docker.yml)
+[![Publish Container Images](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/aceberg/exercisediary)](https://goreportcard.com/report/github.com/aceberg/exercisediary)
-[![Maintainability](https://api.codeclimate.com/v1/badges/e8f67994120fc7936aeb/maintainability)](https://codeclimate.com/github/aceberg/ExerciseDiary/maintainability)
-![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/aceberg/exercisediary)
 
-<h1><a href="https://github.com/aceberg/exercisediary">
+<h1><a href="https://github.com/rwlove/ExerciseDiary">
     <img src="https://raw.githubusercontent.com/aceberg/exercisediary/main/assets/logo.png" width="35" />
 </a>Exercise Diary</h1>
 
-Workout diary with GitHub-style year visualization
+Workout diary with GitHub-style year visualization. Log daily sets, track body weight, and visualize training history with intensity heatmaps.
 
-- [Quick start](https://github.com/aceberg/exercisediary#quick-start)
-- [Binary](https://github.com/aceberg/exercisediary#binary)
-- [Config](https://github.com/aceberg/exercisediary#config)
-- [Options](https://github.com/aceberg/exercisediary#options)
-- [Local network only](https://github.com/aceberg/exercisediary#local-network-only)
-- [Roadmap](https://github.com/aceberg/ExerciseDiary/blob/main/docs/ROADMAP.md)
-- [Thanks](https://github.com/aceberg/exercisediary#thanks)
+- [Architecture](#architecture)
+- [Quick start](#quick-start)
+- [Configuration](#configuration)
+- [API server options](#api-server-options)
+- [Frontend options](#frontend-options)
+- [Local network only](#local-network-only)
+- [Thanks](#thanks)
 
+![Screenshot](assets/Screenshot.png)
 
-![Screenshot](https://raw.githubusercontent.com/aceberg/ExerciseDiary/main/assets/Screenshot.png)
+## Architecture
+
+Exercise Diary runs as two independent services:
+
+```
+┌──────────────────────────┐        ┌──────────────────────────┐
+│  exercisediary-frontend  │─HTTP──▶│  exercisediary-api       │
+│  Web UI  (default :8080) │        │  JSON API  (default :8851│
+└──────────────────────────┘        └───────────┬──────────────┘
+                                                 │
+                                            SQLite DB
+```
+
+| Service | Image | Description |
+|---|---|---|
+| API backend | `ghcr.io/rwlove/exercisediary-api` | Owns the SQLite database, exposes a JSON REST API |
+| Web frontend | `ghcr.io/rwlove/exercisediary-frontend` | Serves the browser UI, talks to the API over HTTP |
 
 ## Quick start
 
 ```sh
-docker run --name exdiary \
--e "TZ=Asia/Novosibirsk" \
--v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
--p 8851:8851 \
-aceberg/exercisediary
+docker compose up
 ```
-Or use [docker-compose.yml](docker-compose.yml)
 
-## Binary
-PPA for amd64 .deb is [here](https://github.com/aceberg/ppa). For other binary options plese look at the [latest release](https://github.com/aceberg/ExerciseDiary/releases/latest).
+Or run each service manually:
 
+```sh
+# Start the API backend (stores data in /data/ExerciseDiary)
+docker run --name exdiary-api \
+  -v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
+  -p 8851:8851 \
+  ghcr.io/rwlove/exercisediary-api
 
-## Config
+# Start the web frontend
+docker run --name exdiary-frontend \
+  -p 8080:8080 \
+  ghcr.io/rwlove/exercisediary-frontend \
+  -a http://<YOUR_HOST_IP>:8851
+```
 
+Then open **http://localhost:8080** in your browser.
 
-Configuration can be done through config file, GUI or environment variables. Variable names is `config.yaml` file are the same, but in lowcase.
+## Configuration
 
-| Variable  | Description | Default |
-| --------  | ----------- | ------- |
-| AUTH | Enable Session-Cookie authentication | false |
-| AUTH_EXPIRE | Session expiration time. A number and suffix: **m, h, d** or **M**. | 7d |
-| AUTH_USER | Username | "" |
-| AUTH_PASSWORD | Encrypted password (bcrypt). [How to encrypt password with bcrypt?](docs/BCRYPT.md) | "" |
-| HOST | Listen address | 0.0.0.0 |
-| PORT   | Port for web GUI | 8851 |
-| THEME | Any theme name from https://bootswatch.com in lowcase or [additional](https://github.com/aceberg/aceberg-bootswatch-fork) (emerald, grass, grayscale, ocean, sand, wood)| grass |
-| COLOR | Background color: light or dark | light |
-| HEATCOLOR | HeatMap color | #03a70c |
-| PAGESTEP | Items on one page | 10 |
-| TZ | Set your timezone for correct time | "" |
+Configuration is read from `config.yaml` or environment variables on the **API** server.
 
-## Options
+| Variable | Description | Default |
+|---|---|---|
+| `AUTH` | Enable session-cookie authentication | `false` |
+| `AUTH_EXPIRE` | Session expiration: number + suffix `m`, `h`, `d`, or `M` | `7d` |
+| `AUTH_USER` | Username | `""` |
+| `AUTH_PASSWORD` | bcrypt-hashed password — [how to generate](docs/BCRYPT.md) | `""` |
+| `HOST` | Listen address | `0.0.0.0` |
+| `PORT` | API listen port | `8851` |
+| `THEME` | Any [Bootswatch](https://bootswatch.com) theme name (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
+| `COLOR` | Background: `light` or `dark` | `light` |
+| `HEATCOLOR` | Heatmap cell color | `#03a70c` |
+| `PAGESTEP` | Rows per page | `10` |
+| `TZ` | Timezone (required for correct date display) | `""` |
 
-| Key  | Description | Default | 
-| --------  | ----------- | ------- | 
-| -d | Path to config dir | /data/ExerciseDiary | 
-| -n | Path to local JS and Themes ([node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap)) | "" | 
+## API server options
+
+| Flag | Description | Default |
+|---|---|---|
+| `-d` | Path to data/config directory | `/data/ExerciseDiary` |
+| `-p` | Port to listen on | `8851` |
+| `-k` | API key required on `X-Api-Key` header (empty = no auth) | `""` |
+
+## Frontend options
+
+| Flag | Description | Default |
+|---|---|---|
+| `-a` | Base URL of the API server | `http://localhost:8851` |
+| `-p` | Port to listen on | `8080` |
+| `-k` | API key sent to the API server | `""` |
+| `-n` | Path to local node_modules ([node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap)) | `""` |
 
 ## Local network only
-By default, this app pulls themes, icons and fonts from the internet. But, in some cases, it may be useful to have an independent from global network setup. I created a separate [image](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) with all necessary modules and fonts.    
-```sh
-docker run --name node-bootstrap       \
-    -v ~/.dockerdata/icons:/app/icons  \ # For local images
-    -p 8850:8850                       \
-    aceberg/node-bootstrap
-```
-```sh
-docker run --name exdiary \
-    -v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
-    -p 8851:8851 \
-    aceberg/exercisediary -n "http://$YOUR_IP:8850"
-```
-Or use [docker-compose](docker-compose-local.yml)
 
-## Roadmap
-Moved to [docs/ROADMAP.md](docs/ROADMAP.md)
+By default the app loads themes, icons, and fonts from the internet. For an air-gapped setup, run the [node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) sidecar and pass its URL to the frontend via `-n`:
+
+```sh
+docker run --name node-bootstrap \
+  -v ~/.dockerdata/icons:/app/icons \
+  -p 8850:8850 \
+  aceberg/node-bootstrap
+
+docker run --name exdiary-frontend \
+  -p 8080:8080 \
+  ghcr.io/rwlove/exercisediary-frontend \
+  -a http://<YOUR_HOST_IP>:8851 \
+  -n http://<YOUR_HOST_IP>:8850
+```
+
+Or use [docker-compose-local.yml](docker-compose-local.yml) to build both images from source.
 
 ## Thanks
-- All go packages listed in [dependencies](https://github.com/aceberg/exercisediary/network/dependencies)
-- [Bootstrap](https://getbootstrap.com/)
-- Themes: [Free themes for Bootstrap](https://bootswatch.com)
+
+- All Go packages listed in [dependencies](https://github.com/aceberg/exercisediary/network/dependencies)
+- [Bootstrap](https://getbootstrap.com/) and [Bootswatch](https://bootswatch.com) themes
 - [Chart.js](https://github.com/chartjs/Chart.js) and [chartjs-chart-matrix](https://github.com/kurkle/chartjs-chart-matrix)
 - Favicon and logo: [Flaticon](https://www.flaticon.com/icons/)
