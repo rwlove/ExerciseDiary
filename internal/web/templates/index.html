@@ -3,236 +3,301 @@
 <script src="/fs/public/js/heatmap.js"></script>
 <script src="/fs/public/js/index.js"></script>
 <script src="/fs/public/js/weight-chart.js"></script>
-<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css" />
-<body>
-<!-- Add Weight Modal -->
-<div class="modal" id="mWeight">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Add weight</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true"></span>
-        </button>
+<link rel="stylesheet" type="text/css" href="/fs/public/css/index.css">
+
+<!-- ── Add Weight Modal ─────────────────────────────────────────────────── -->
+<div class="modal fade" id="mWeight" tabindex="-1" aria-labelledby="mWeightLabel" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h6 class="modal-title fw-bold" id="mWeightLabel">
+          <i class="bi bi-speedometer2 me-2 text-primary"></i>Log Weight
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form action="/weight/" method="post" name="sets">
-          <table class="table table-borderless">
-            <tr>
-              <td>Date</td>
-              <td><input name="date" type="date" class="form-control" id="weightDate"></td>
-            </tr>
-            <tr>
-              <td>Weight</td>
-              <td><input name="weight" type="number" step="any" min="0" class="form-control"></td>
-            </tr>
-            <tr>
-              <td>
-                <button type="submit" class="btn btn-primary">Save</button>
-              </td>
-            </tr>
-          </table>
+        <form action="/weight/" method="post">
+          <div class="mb-3">
+            <label class="form-label small text-secondary fw-semibold text-uppercase" style="font-size:0.72rem;letter-spacing:.06em;">Date</label>
+            <input name="date" type="date" class="form-control rounded-3" id="weightDate">
+          </div>
+          <div class="mb-4">
+            <label class="form-label small text-secondary fw-semibold text-uppercase" style="font-size:0.72rem;letter-spacing:.06em;">Weight</label>
+            <input name="weight" type="number" step="any" min="0" class="form-control rounded-3" placeholder="e.g. 75.5">
+          </div>
+          <button type="submit" class="btn btn-primary w-100 rounded-3">
+            <i class="bi bi-check2 me-1"></i>Save
+          </button>
         </form>
       </div>
     </div>
   </div>
 </div>
-<!-- End Modal -->
-<div class="container-lg mt-4">
-  <div class="row">
-    <!-- Left column in landscape mode, full width in portrait -->
-    <div class="col-12 col-lg-8 mb-4 main-left-col">
-      <!-- Intensity Heatmap -->
-      <div class="card border-primary mb-4">
-        <div class="card-header">Workout Intensity</div>
-        <div class="card-body">
-          <div class="horiz-scroll">
-              <div style="height: 120px; width: 900px;">
-                  <canvas id="intensity-chart" style="height: 100%; width: 100%;"></canvas>
-              </div>
+
+<!-- ── Exercise Detail Modals ────────────────────────────────────────────── -->
+{{ range .ExData.Exs }}
+<div class="modal fade" id="modal{{ .ID }}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <div class="d-flex align-items-center gap-2">
+          <div style="width:14px;height:14px;border-radius:50%;background:{{ .Color }};flex-shrink:0;"></div>
+          <h6 class="modal-title fw-bold mb-0">{{ .Name }}</h6>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-2">
+        {{ if .Image }}
+        <img src="{{ .Image }}" class="w-100 rounded-3 mb-3" style="max-height:200px;object-fit:cover;" alt="{{ .Name }}">
+        {{ end }}
+        {{ if .Descr }}
+        <p class="text-secondary small mb-3">{{ .Descr }}</p>
+        {{ end }}
+        <div class="d-flex gap-2">
+          <div class="flex-fill text-center p-2 rounded-3 bg-body-secondary">
+            <div class="fw-bold">{{ .Weight }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Weight</div>
+          </div>
+          <div class="flex-fill text-center p-2 rounded-3 bg-body-secondary">
+            <div class="fw-bold">{{ .Reps }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Reps</div>
+          </div>
+          <div class="flex-fill text-center p-2 rounded-3 bg-body-secondary">
+            <div class="fw-bold">{{ .Intensity }}</div>
+            <div class="text-secondary" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;">Intensity</div>
           </div>
         </div>
       </div>
-      <!-- Color Heatmap -->
-      <div class="card border-primary mb-4">
-        <div class="card-header">Workout Colors</div>
-        <div class="card-body">
-          <div class="horiz-scroll">
-              <div style="height: 120px; width: 900px;">
-                  <canvas id="color-chart" style="height: 100%; width: 100%;"></canvas>
-              </div>
+      <div class="modal-footer border-0 pt-0">
+        <a href="/exercise/?id={{ .ID }}" class="btn btn-sm btn-outline-secondary rounded-3">
+          <i class="bi bi-pencil me-1"></i>Edit exercise
+        </a>
+        <button type="button" class="btn btn-sm btn-primary rounded-3" data-bs-dismiss="modal"
+          onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}", "{{ .Intensity }}", "{{ .Color }}")'>
+          <i class="bi bi-plus me-1"></i>Add to today
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+<!-- ── Sticky Date Navigation Bar ───────────────────────────────────────── -->
+<div class="date-nav-bar">
+  <div class="container-xl">
+    <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+      <!-- Date navigation -->
+      <div class="d-flex align-items-center gap-2">
+        <button class="nav-day-btn" onclick='moveDayLeftRight(-1, window._allSets)' title="Previous day">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <input type="date" class="form-control" id="realDate"
+          onchange='setFormContent(window._allSets, this.value)'>
+        <button class="nav-day-btn" onclick='moveDayLeftRight(1, window._allSets)' title="Next day">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+        <button class="today-chip" onclick="goToToday()">Today</button>
+      </div>
+      <!-- Quick actions -->
+      <div class="d-flex gap-2">
+        <button class="quick-action-btn" data-bs-toggle="modal" data-bs-target="#mWeight" onclick="setWeightDate()">
+          <i class="bi bi-speedometer2"></i><span>Log Weight</span>
+        </button>
+        <a class="quick-action-btn" href="/stats/">
+          <i class="bi bi-bar-chart-line"></i><span>View Stats</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main Content ──────────────────────────────────────────────────────── -->
+<div class="container-xl py-4">
+  <div class="row g-4">
+
+    <!-- ── Exercise Picker ─────────────────────────────────────────────── -->
+    <div class="col-12 col-lg-5">
+      <div class="panel" style="min-height:340px;">
+        <div class="panel-header">
+          <span class="panel-title">Exercises</span>
+          <a href="/exercise/?id=new" class="btn btn-sm btn-primary rounded-pill px-3" style="font-size:0.78rem;">
+            <i class="bi bi-plus me-1"></i>New
+          </a>
+        </div>
+
+        <!-- Step 1: Group chips -->
+        <div class="group-selector" id="groupSelector">
+          <div class="group-chips">
+            {{ range $gr, $grID := .GroupMap }}
+            <button class="group-chip" data-group="{{ $gr }}"
+              onclick='selectGroup("{{ $gr }}")'>{{ $gr }}</button>
+            {{ end }}
           </div>
         </div>
-      </div>
-      <!-- Color Legend -->
-      <div class="card border-primary mb-4 regular-legend">
-        <div class="card-header">Exercise Color Legend</div>
-        <div class="card-body">
-          <div class="row">
+
+        <!-- Step 2: Exercise list for selected group -->
+        <div class="exercise-list-area">
+          <!-- Group header shown when a group is selected -->
+          <div id="groupHeader" class="group-list-header" style="display:none;">
+            <button class="back-btn" onclick="clearGroup()" title="Back to groups">
+              <i class="bi bi-arrow-left"></i>
+            </button>
+            <span id="groupHeaderName" class="fw-semibold" style="font-size:0.9rem;"></span>
+            <div class="ms-auto d-flex align-items-center gap-2">
+              <input type="text" id="exSearch" class="form-control form-control-sm ex-search-inline"
+                placeholder="Filter…" oninput="filterExercises()" autocomplete="off">
+              <button class="add-all-btn" id="addAllBtn" title="Add all to today"
+                onclick='addAllGroup(window._allExs, window._selectedGroup)'>
+                <i class="bi bi-plus-square-dotted me-1"></i>All
+              </button>
+            </div>
+          </div>
+
+          <!-- Exercise items (all rendered, shown/hidden by group) -->
+          <div id="exerciseListBody">
             {{ range .ExData.Exs }}
-            <div class="col-md-4 mb-2">
-              <div class="d-flex align-items-center">
-                <div style="width: 24px; height: 24px; background-color: {{ .Color }}; margin-right: 12px; border-radius: 4px;"></div>
-                <span class="text-nowrap">{{ .Name }}</span>
+            <div class="exercise-item" data-name="{{ .Name }}" data-group="{{ .Group }}" style="display:none;">
+              <div class="ex-color-dot" style="background-color:{{ .Color }};"></div>
+              <button class="ex-name-btn"
+                onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}", "{{ .Intensity }}", "{{ .Color }}")'
+                title="Add to today">{{ .Name }}</button>
+              <div class="ex-icon-group">
+                <button class="ex-icon-btn" title="Details"
+                  data-bs-toggle="modal" data-bs-target="#modal{{ .ID }}">
+                  <i class="bi bi-info-circle"></i>
+                </button>
+                <a class="ex-icon-btn" href="/exercise/?id={{ .ID }}" title="Edit">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <button class="ex-icon-btn ex-plus-btn"
+                  onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}", "{{ .Intensity }}", "{{ .Color }}")'
+                  title="Add">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
               </div>
             </div>
             {{ end }}
+          </div>
+
+          <!-- Shown when no group selected yet -->
+          <div id="noGroupState" class="empty-state" style="padding:28px 20px;">
+            <div class="empty-icon"><i class="bi bi-collection"></i></div>
+            <p>Select a group above to browse exercises</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Today's Workout Log ─────────────────────────────────────────── -->
+    <div class="col-12 col-lg-7">
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Today's Workout</span>
+        </div>
+        <form action="/set/" method="post" name="sets">
+          <input name="date" type="hidden" id="formDate">
+          <div class="workout-log-body">
+            <div id="todayEx"></div>
+            <div class="empty-state" id="emptyState">
+              <div class="empty-icon"><i class="bi bi-dumbbell"></i></div>
+              <p>Tap an exercise on the left to add it here</p>
+            </div>
+          </div>
+          <div class="panel-footer">
+            <button type="submit" class="btn btn-primary w-100 rounded-3">
+              <i class="bi bi-check2-circle me-2"></i>Save Workout
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── History Section ──────────────────────────────────────────────── -->
+  <div class="section-header mt-5 mb-3">
+    <h6 class="section-title">Training History</h6>
+    <a href="/stats/" class="btn btn-sm btn-outline-primary rounded-pill px-3" style="font-size:0.8rem;">
+      Full Stats <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+  </div>
+
+  <div class="row g-4">
+    <!-- Heatmaps -->
+    <div class="col-12 col-lg-8">
+      <div class="panel mb-3">
+        <div class="panel-header"><span class="panel-title">Workout Intensity</span></div>
+        <div class="panel-body p-2">
+          <div class="horiz-scroll">
+            <div style="height:110px;width:900px;">
+              <canvas id="intensity-chart" style="height:100%;width:100%;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span class="panel-title">Exercise Colors</span></div>
+        <div class="panel-body p-2">
+          <div class="horiz-scroll">
+            <div style="height:110px;width:900px;">
+              <canvas id="color-chart" style="height:100%;width:100%;"></canvas>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- Right column in landscape mode, full width in portrait -->
-    <div class="col-12 col-lg-4 mb-4 main-right-col">
-      <!-- Exercise Selection Panel -->
-      <div class="card border-primary mb-4">
-        <div class="card-header">Exercise Selection</div>
-        <div class="card-body p-0">
-          <div class="accordion">
-            {{ range $gr, $grID := .GroupMap }}
-            <div class="accordion-item border-primary">
-              <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $grID }}" aria-expanded="false" aria-controls="{{ $grID }}">
-                  {{ $gr }}
-                </button>
-              </h2>
-              <div id="{{ $grID }}" class="accordion-collapse collapse">
-                <div class="accordion-body">
-                  <div class="row">
-                    <div class="col-md-11">
-                      {{ range $.ExData.Exs }}
-                      {{ if eq .Group $gr }}
-                      <div class="hstack gap-2">
-                        <a href="/exercise/?id={{ .ID }}">
-                          <button class="btn del-set-button" title="Edit">
-                            <i class="bi bi-pencil-square"></i>
-                          </button>
-                        </a>
-                        <button class="btn add-exercise-button" title="Show details" data-bs-toggle="modal" data-bs-target="#modal{{ .ID }}">
-                          <i class="bi bi-window-desktop"></i>
-                        </button>
-                        <!-- Modal -->
-                        <div class="modal" id="modal{{ .ID }}">
-                          <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                              <div class="modal-header">
-                                <h5 class="modal-title">{{ .Name }}</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
-                                  <span aria-hidden="true"></span>
-                                </button>
-                              </div>
-                              <div class="modal-body">
-                                <div class="col">
-                                  <p>Description: {{ .Descr }}</p>
-                                  <p>Weight (default): {{ .Weight }}</p>
-                                  <p>Reps (default): {{ .Reps }}</p>
-                                  <p>Intensity (default): {{ .Intensity }}</p>
-                                </div>
-                                <div class="col">
-                                  <img src="{{ .Image }}" style="max-width: 100%;max-height: 100%;" alt="Exercise Image"></img>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <!-- End Modal -->
-                        <button class="btn exercise-button" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}", "{{ .Intensity }}", "{{ .Color }}")' title="Weight: {{ .Weight }}; Reps: {{ .Reps }}; Intensity: {{ .Intensity }}">{{ .Name }}</button>
-                        <button class="btn add-exercise-button" onclick='addExercise("{{ .Name }}", "{{ .Weight }}", "{{ .Reps }}", "{{ .Intensity }}", "{{ .Color }}")' title="Add">
-                          <i class="bi bi-arrow-right-square"></i>
-                        </button>
-                      </div>
-                      {{ end }}
-                      {{ end }}
-                    </div>
-                    <div class="col-md-1">
-                      <button class="btn del-set-button" title="Add group" onclick='addAllGroup({{ $.ExData.Exs }}, {{ $gr }})'>
-                        <i class="bi bi-chevron-compact-right"></i>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
+    <!-- Weight + Legend -->
+    <div class="col-12 col-lg-4">
+      <div class="panel mb-3">
+        <div class="panel-header">
+          <span class="panel-title">Body Weight</span>
+          <button class="panel-action-btn" data-bs-toggle="modal" data-bs-target="#mWeight"
+            onclick="setWeightDate()" title="Log weight">
+            <i class="bi bi-plus"></i>
+          </button>
+        </div>
+        <div class="panel-body">
+          <div style="overflow-x:auto;">
+            <canvas id="weight-chart" style="height:110px;"></canvas>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-sm btn-outline-secondary w-100 rounded-3"
+              data-bs-toggle="modal" data-bs-target="#mWeight" onclick="setWeightDate()">
+              <i class="bi bi-plus-circle me-1"></i>Add weight entry
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Desktop legend -->
+      <div class="panel regular-legend">
+        <div class="panel-header"><span class="panel-title">Legend</span></div>
+        <div class="panel-body">
+          <div class="legend-grid">
+            {{ range .ExData.Exs }}
+            <div class="legend-item">
+              <div class="legend-color" style="background-color:{{ .Color }};"></div>
+              <span class="legend-name">{{ .Name }}</span>
             </div>
             {{ end }}
-          </div>
-        </div>
-      </div>
-      <!-- Current Workout Panel -->
-      <div class="card border-primary mb-4">
-        <div class="card-header">
-          <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md hstack">
-              <button onclick='moveDayLeftRight(-1, {{ .ExData.Sets }})' class="btn del-set-button">
-                <i class="bi bi-arrow-left-square"></i>
-              </button>
-              <input type="date" class="m-auto form-control" onchange='setFormContent({{ .ExData.Sets }}, this.value)' id="realDate" style="width: 70%;">
-              <button onclick='moveDayLeftRight(1, {{ .ExData.Sets }})' class="btn del-set-button">
-                <i class="bi bi-arrow-right-square"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="card-body">
-          <form action="/set/" method="post" name="sets">
-            <input name="date" type="hidden" id="formDate">
-            <div class="table-responsive">
-              <table class="table table-borderless">
-                <thead>
-                  <th class="col-9">Name</th>
-                  <th class="col-1">Intensity</th>
-                  <th class="col-1">Color</th>
-                  <th class="col-1"></th>
-                </thead>
-                <tbody id="todayEx">
-                  <!-- Hidden form fields for weight and reps will be added here by JavaScript -->
-                </tbody>
-              </table>
-            </div>
-            <div class="row mt-3">
-              <div class="col-md-12 text-end">
-                <button type="submit" class="btn btn-primary">Save</button>
-              </div>
-            </div>
-          </form>
-        </div>
-      </div>
-      <!-- Weight Chart -->
-      <div class="card border-primary">
-        <div class="card-header">Weight Tracking</div>
-        <div class="card-body" style="overflow-x: scroll;">
-          <div class="d-flex justify-content-evenly">
-            <div class="col-md-10">
-              <div class="chart-container" style="max-width: fit-content">
-                <canvas id="weight-chart" style="height: 100px;"></canvas>
-              </div>
-            </div>
-            <div class="col-md-2">
-              <button class="btn del-set-button" title="Add weight" data-bs-toggle="modal" data-bs-target="#mWeight" onclick='setWeightDate()'>
-                <h4><i class="bi bi-window-plus"></i></h4>
-              </button>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-  
-  <!-- PWA Bottom Legend -->
-  <div class="row pwa-legend" style="display: none;">
-    <div class="col-12">
-      <div class="card border-primary mb-4">
-        <div class="card-header">Exercise Color Legend</div>
-        <div class="card-body">
-          <div class="row">
-            {{ range .ExData.Exs }}
-            <div class="col-md-4 mb-2">
-              <div class="d-flex align-items-center">
-                <div style="width: 24px; height: 24px; background-color: {{ .Color }}; margin-right: 12px; border-radius: 4px;"></div>
-                <span class="text-nowrap">{{ .Name }}</span>
-              </div>
-            </div>
-            {{ end }}
+
+  <!-- PWA legend (shown only in standalone mode) -->
+  <div class="pwa-legend mt-4" style="display:none;">
+    <div class="panel">
+      <div class="panel-header"><span class="panel-title">Legend</span></div>
+      <div class="panel-body">
+        <div class="legend-grid">
+          {{ range .ExData.Exs }}
+          <div class="legend-item">
+            <div class="legend-color" style="background-color:{{ .Color }};"></div>
+            <span class="legend-name">{{ .Name }}</span>
           </div>
+          {{ end }}
         </div>
       </div>
     </div>
@@ -240,7 +305,9 @@
 </div>
 
 <script>
-  setFormDate({{ .ExData.Sets }});
+  window._allSets = {{ .ExData.Sets }};
+  window._allExs  = {{ .ExData.Exs }};
+  setFormDate(window._allSets);
   generateWeightChart({{ .ExData.Weight }}, {{ .Config.HeatColor }}, -7);
   makeIntensityChart({{ .IntensityHeatMap }}, {{ .Config.HeatColor }}, {{ .ExData.Sets }});
   makeColorChart({{ .ColorHeatMap }}, {{ .ExData.Sets }});
