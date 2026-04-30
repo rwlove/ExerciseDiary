@@ -171,6 +171,17 @@ func (a *APIClient) SaveConfig(cfg models.Conf) error {
 	return checkStatus(resp)
 }
 
+// MigrateFromSQLite triggers the SQLite → PostgreSQL data migration on the API server.
+// Returns the counts of migrated records per table.
+func (a *APIClient) MigrateFromSQLite() (map[string]interface{}, error) {
+	resp, err := a.do("POST", "/api/migrate/sqlite-to-postgres", nil)
+	if err != nil {
+		return nil, err
+	}
+	var out map[string]interface{}
+	return out, decodeJSON(resp, &out)
+}
+
 // SaveConfigAuth updates authentication settings via the API.
 func (a *APIClient) SaveConfigAuth(user, password, expStr string, authEnabled bool) error {
 	body := map[string]interface{}{
