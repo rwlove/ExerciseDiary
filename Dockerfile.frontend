@@ -1,0 +1,13 @@
+FROM golang:alpine AS builder
+
+COPY . /src
+RUN cd /src && CGO_ENABLED=0 go build -o /exercisediary-frontend ./cmd/frontend
+
+FROM scratch
+
+WORKDIR /data/ExerciseDiary
+WORKDIR /app
+
+COPY --from=builder /exercisediary-frontend /app/
+
+ENTRYPOINT ["./exercisediary-frontend"]
