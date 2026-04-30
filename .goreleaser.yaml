@@ -44,18 +44,6 @@ builds:
       - goos: windows
         goarch: arm
 
-nfpms:
-  - maintainer: aceberg <aceberg_a@proton.me>
-    description: Workout diary with GitHub-style year visualization
-    homepage: https://github.com/rwlove/WorkoutDiary
-    license: MIT
-    section: utils
-    formats:
-    - deb
-    - rpm
-    - apk
-    - termux.deb
-
 archives:
   - files:
     - LICENSE
