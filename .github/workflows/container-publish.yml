@@ -52,8 +52,7 @@ jobs:
           labels: |
             org.opencontainers.image.description=${{ matrix.description }}
           tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
+            type=ref,event=tag
             type=raw,value=latest
 
       - name: Build and push
