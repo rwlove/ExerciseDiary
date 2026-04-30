@@ -9,7 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/rwlove/WorkoutDiary/internal/auth"
-	"github.com/rwlove/WorkoutDiary/internal/check"
 	"github.com/rwlove/WorkoutDiary/internal/conf"
 	"github.com/rwlove/WorkoutDiary/internal/models"
 )
@@ -28,10 +27,7 @@ func configHandler(c *gin.Context) {
 	guiData.Config = appConfig
 	guiData.Auth = authConf
 	guiData.Themes = themes
-
-	file, err := pubFS.ReadFile("public/version")
-	check.IfError(err)
-	guiData.Version = string(file)[8:]
+	guiData.Version = Version
 
 	c.HTML(http.StatusOK, "header.html", guiData)
 	c.HTML(http.StatusOK, "config.html", guiData)

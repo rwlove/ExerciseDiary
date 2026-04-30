@@ -1,8 +1,12 @@
 FROM golang:alpine AS builder
 
+ARG VERSION=dev
+
 RUN apk add --no-cache build-base
 COPY . /src
-RUN cd /src && CGO_ENABLED=0 go build -o /workoutdiary-api ./cmd/api
+RUN cd /src && CGO_ENABLED=0 go build \
+    -ldflags "-X github.com/rwlove/WorkoutDiary/internal/web.Version=${VERSION}" \
+    -o /workoutdiary-api ./cmd/api
 
 FROM scratch
 

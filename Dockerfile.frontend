@@ -1,7 +1,11 @@
 FROM golang:alpine AS builder
 
+ARG VERSION=dev
+
 COPY . /src
-RUN cd /src && CGO_ENABLED=0 go build -o /workoutdiary-frontend ./cmd/frontend
+RUN cd /src && CGO_ENABLED=0 go build \
+    -ldflags "-X github.com/rwlove/WorkoutDiary/internal/web.Version=${VERSION}" \
+    -o /workoutdiary-frontend ./cmd/frontend
 
 FROM scratch
 

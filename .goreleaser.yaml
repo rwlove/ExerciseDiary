@@ -25,6 +25,8 @@ builds:
     main: ./cmd/frontend/
     binary: workoutdiary-frontend
     env: [CGO_ENABLED=0]
+    ldflags:
+      - -X github.com/rwlove/WorkoutDiary/internal/web.Version={{.Tag}}
     goos:
       - linux
       - windows
