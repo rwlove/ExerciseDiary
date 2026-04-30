@@ -8,6 +8,13 @@ import (
 	"github.com/rwlove/WorkoutDiary/internal/store"
 )
 
+// Version is injected at build time via:
+//
+//	go build -ldflags "-X github.com/rwlove/WorkoutDiary/internal/web.Version=v0.7"
+//
+// Falls back to "dev" when building without ldflags.
+var Version = "dev"
+
 var (
 	// appConfig - config for Web Gui
 	appConfig models.Conf
