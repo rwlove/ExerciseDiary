@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"os"
 
 	_ "time/tzdata"
 
@@ -9,20 +9,25 @@ import (
 	"github.com/aceberg/ExerciseDiary/internal/web"
 )
 
-const (
-	defaultPort   = "8080"
-	defaultAPIURL = "http://localhost:8851"
-	defaultAPIKey = ""
-	defaultNode   = ""
-)
+func envOr(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
 
+// All configuration is read from environment variables:
+//
+//	PORT      listen port for the web UI  (default: 8080)
+//	API_URL   base URL of the API server  (default: http://localhost:8851)
+//	API_KEY   X-Api-Key sent to the API   (default: "", no auth)
+//	NODE_PATH path to local node_modules  (default: "", use CDN)
 func main() {
-	portPtr := flag.String("p", defaultPort, "Port for the frontend to listen on")
-	apiURLPtr := flag.String("a", defaultAPIURL, "Base URL of the ExerciseDiary API server")
-	keyPtr := flag.String("k", defaultAPIKey, "API key sent to the API server (X-Api-Key header)")
-	nodePtr := flag.String("n", defaultNode, "Path to node_modules (empty = use CDN)")
-	flag.Parse()
+	port := envOr("PORT", "8080")
+	apiURL := envOr("API_URL", "http://localhost:8851")
+	apiKey := envOr("API_KEY", "")
+	nodePath := envOr("NODE_PATH", "")
 
-	ac := store.NewAPIClient(*apiURLPtr, *keyPtr)
-	web.GuiWithStore(ac, ac, *portPtr, *nodePtr)
+	ac := store.NewAPIClient(apiURL, apiKey)
+	web.GuiWithStore(ac, ac, port, nodePath)
 }

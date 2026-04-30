@@ -4,67 +4,68 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/check"
 	"github.com/aceberg/ExerciseDiary/internal/models"
 )
 
-// Get - read config from file or env
-func Get(path string) (config models.Conf, authConf auth.Conf) {
+// GetFromEnv reads all configuration from environment variables only.
+// No config file is required. This is the primary configuration path for
+// the split-service deployment.
+func GetFromEnv() (config models.Conf, authConf auth.Conf) {
+	v := viper.New()
 
-	viper.SetDefault("HOST", "0.0.0.0")
-	viper.SetDefault("PORT", "8851")
-	viper.SetDefault("THEME", "grass")
-	viper.SetDefault("COLOR", "light")
-	viper.SetDefault("HEATCOLOR", "#03a70c")
-	viper.SetDefault("PAGESTEP", 10)
+	v.SetDefault("HOST", "0.0.0.0")
+	v.SetDefault("PORT", "8851")
+	v.SetDefault("THEME", "grass")
+	v.SetDefault("COLOR", "light")
+	v.SetDefault("HEATCOLOR", "#03a70c")
+	v.SetDefault("PAGESTEP", 10)
+	v.SetDefault("AUTH_EXPIRE", "7d")
 
-	viper.SetDefault("AUTH_USER", "")
-	viper.SetDefault("AUTH_PASSWORD", "")
-	viper.SetDefault("AUTH_EXPIRE", "7d")
+	v.AutomaticEnv()
 
-	viper.SetConfigFile(path)
-	viper.SetConfigType("yaml")
-	err := viper.ReadInConfig()
-	check.IfError(err)
+	config.Host = v.GetString("HOST")
+	config.Port = v.GetString("PORT")
+	config.Theme = v.GetString("THEME")
+	config.Color = v.GetString("COLOR")
+	config.HeatColor = v.GetString("HEATCOLOR")
+	config.PageStep = v.GetInt("PAGESTEP")
 
-	viper.AutomaticEnv() // Get ENVIRONMENT variables
-
-	config.Host, _ = viper.Get("HOST").(string)
-	config.Port, _ = viper.Get("PORT").(string)
-	config.Theme, _ = viper.Get("THEME").(string)
-	config.Color, _ = viper.Get("COLOR").(string)
-	config.HeatColor, _ = viper.Get("HEATCOLOR").(string)
-	config.PageStep = viper.GetInt("PAGESTEP")
-
-	authConf.Auth = viper.GetBool("AUTH")
-	authConf.User, _ = viper.Get("AUTH_USER").(string)
-	authConf.Password, _ = viper.Get("AUTH_PASSWORD").(string)
-	authConf.ExpStr, _ = viper.Get("AUTH_EXPIRE").(string)
-
+	authConf.Auth = v.GetBool("AUTH")
+	authConf.User = v.GetString("AUTH_USER")
+	authConf.Password = v.GetString("AUTH_PASSWORD")
+	authConf.ExpStr = v.GetString("AUTH_EXPIRE")
 	authConf.Expire = auth.ToTime(authConf.ExpStr)
 	config.Auth = authConf.Auth
 
 	return config, authConf
 }
 
-// Write - write config to file
+// Write persists config to the YAML file at config.ConfPath.
+// It is a no-op when ConfPath is empty (env-var-only mode).
 func Write(config models.Conf, authConf auth.Conf) {
+	if config.ConfPath == "" {
+		return
+	}
 
-	viper.SetConfigFile(config.ConfPath)
-	viper.SetConfigType("yaml")
+	v := viper.New()
+	v.SetConfigFile(config.ConfPath)
+	v.SetConfigType("yaml")
 
-	viper.Set("host", config.Host)
-	viper.Set("port", config.Port)
-	viper.Set("theme", config.Theme)
-	viper.Set("color", config.Color)
-	viper.Set("heatcolor", config.HeatColor)
-	viper.Set("pagestep", config.PageStep)
+	v.Set("host", config.Host)
+	v.Set("port", config.Port)
+	v.Set("theme", config.Theme)
+	v.Set("color", config.Color)
+	v.Set("heatcolor", config.HeatColor)
+	v.Set("pagestep", config.PageStep)
 
-	viper.Set("auth", authConf.Auth)
-	viper.Set("auth_user", authConf.User)
-	viper.Set("auth_password", authConf.Password)
-	viper.Set("auth_expire", authConf.ExpStr)
+	v.Set("auth", authConf.Auth)
+	v.Set("auth_user", authConf.User)
+	v.Set("auth_password", authConf.Password)
+	v.Set("auth_expire", authConf.ExpStr)
 
-	err := viper.WriteConfig()
-	check.IfError(err)
+	if err := v.WriteConfig(); err != nil {
+		// Best-effort — don't crash when running in env-var-only mode
+		// and the config file path was never created.
+		return
+	}
 }
