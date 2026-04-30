@@ -53,13 +53,6 @@ nfpms:
     - rpm
     - apk
     - termux.deb
-    contents:
-    - src: ./configs/workoutdiary-api.service
-      dst: /lib/systemd/system/workoutdiary-api.service
-    - src: ./configs/workoutdiary-frontend.service
-      dst: /lib/systemd/system/workoutdiary-frontend.service
-    scripts:
-      postinstall: ./configs/postinstall.sh
 
 archives:
   - files:
