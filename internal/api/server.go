@@ -3,15 +3,16 @@ package api
 import (
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/check"
-	"github.com/aceberg/ExerciseDiary/internal/conf"
-	"github.com/aceberg/ExerciseDiary/internal/db"
-	"github.com/aceberg/ExerciseDiary/internal/models"
-	"github.com/aceberg/ExerciseDiary/internal/store"
+	"github.com/rwlove/WorkoutDiary/internal/auth"
+	"github.com/rwlove/WorkoutDiary/internal/check"
+	"github.com/rwlove/WorkoutDiary/internal/conf"
+	"github.com/rwlove/WorkoutDiary/internal/db"
+	"github.com/rwlove/WorkoutDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/store"
 )
 
 var (
@@ -20,16 +21,32 @@ var (
 	dataStore store.Store
 )
 
-// Start initialises the database, reads config, and begins serving the JSON API.
-func Start(dirPath, port, apiKey string) {
-	confPath := dirPath + "/config.yaml"
-	check.Path(confPath)
-
-	appConfig, authConf = conf.Get(confPath)
-	appConfig.DirPath = dirPath
-	appConfig.DBPath = dirPath + "/sqlite.db"
+// Start initialises the database, reads config from environment variables,
+// and begins serving the JSON API.
+//
+// dataDir is the only required parameter — it sets where the SQLite database
+// lives. All other settings (port, API key, theme, auth, …) are read from
+// environment variables:
+//
+//	PORT        listen port              (default: 8851)
+//	API_KEY     required X-Api-Key value (default: "", no auth)
+//	HOST        listen host              (default: 0.0.0.0)
+//	THEME       UI theme                 (default: grass)
+//	COLOR       light or dark            (default: light)
+//	HEATCOLOR   heatmap colour           (default: #03a70c)
+//	PAGESTEP    rows per page            (default: 10)
+//	AUTH        enable session auth      (default: false)
+//	AUTH_USER   username                 (default: "")
+//	AUTH_PASSWORD bcrypt password        (default: "")
+//	AUTH_EXPIRE session expiry           (default: 7d)
+func Start(dataDir string) {
+	appConfig, authConf = conf.GetFromEnv()
+	appConfig.DirPath = dataDir
+	appConfig.DBPath = dataDir + "/sqlite.db"
+	// ConfPath left empty — Settings changes are in-memory only in env-var mode.
 	check.Path(appConfig.DBPath)
-	appConfig.ConfPath = confPath
+
+	apiKey := os.Getenv("API_KEY")
 
 	log.Println("INFO: starting API server, db =", appConfig.DBPath)
 
@@ -39,7 +56,7 @@ func Start(dirPath, port, apiKey string) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// API key middleware (optional – skip when apiKey is empty)
+	// API key middleware (optional – skip when API_KEY is unset)
 	if apiKey != "" {
 		r.Use(apiKeyMiddleware(apiKey))
 	}
@@ -64,7 +81,7 @@ func Start(dirPath, port, apiKey string) {
 	r.PUT("/api/config", putConfig)
 	r.PUT("/api/config/auth", putConfigAuth)
 
-	address := "0.0.0.0:" + port
+	address := appConfig.Host + ":" + appConfig.Port
 	log.Println("=================================== ")
 	log.Printf("API server at http://%s", address)
 	log.Println("=================================== ")
