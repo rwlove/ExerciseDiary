@@ -3,9 +3,9 @@ package web
 import (
 	"embed"
 
-	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/models"
-	"github.com/aceberg/ExerciseDiary/internal/store"
+	"github.com/rwlove/WorkoutDiary/internal/auth"
+	"github.com/rwlove/WorkoutDiary/internal/models"
+	"github.com/rwlove/WorkoutDiary/internal/store"
 )
 
 var (

@@ -3,7 +3,7 @@ package models
 import (
 	"github.com/shopspring/decimal"
 
-	"github.com/aceberg/ExerciseDiary/internal/auth"
+	"github.com/rwlove/WorkoutDiary/internal/auth"
 )
 
 // Conf - web gui config

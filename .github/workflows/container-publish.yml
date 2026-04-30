@@ -22,12 +22,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: exercisediary-api
+          - image: workoutdiary-api
             dockerfile: Dockerfile.api
-            description: "ExerciseDiary JSON API backend"
-          - image: exercisediary-frontend
+            description: "WorkoutDiary JSON API backend"
+          - image: workoutdiary-frontend
             dockerfile: Dockerfile.frontend
-            description: "ExerciseDiary web frontend (connects to API backend)"
+            description: "WorkoutDiary web frontend (connects to API backend)"
 
     steps:
       - name: Checkout repository

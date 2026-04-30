@@ -1,6 +1,6 @@
 package store
 
-import "github.com/aceberg/ExerciseDiary/internal/models"
+import "github.com/rwlove/WorkoutDiary/internal/models"
 
 // Store abstracts data access so both the monolith (SQLite) and the
 // split frontend (HTTP API client) can satisfy the same interface.

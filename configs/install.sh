@@ -1,5 +1,4 @@
 #!/bin/sh
 
-cp exercisediary /usr/bin/
-cp ExerciseDiary.service /lib/systemd/system/
-cp ExerciseDiary@.service /lib/systemd/system/
+cp workoutdiary-api /usr/bin/
+cp workoutdiary-frontend /usr/bin/

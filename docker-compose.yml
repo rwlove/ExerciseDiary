@@ -1,12 +1,12 @@
 version: "3"
 services:
   exdiary-api:
-    image: ghcr.io/rwlove/exercisediary-api:latest
+    image: ghcr.io/rwlove/workoutdiary-api:latest
     restart: unless-stopped
     ports:
       - "8851:8851"
     volumes:
-      - ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary
+      - ~/.dockerdata/WorkoutDiary:/data/WorkoutDiary
     environment:
       TZ: America/New_York
       PORT: "8851"
@@ -22,7 +22,7 @@ services:
       # AUTH_EXPIRE: "7d"
 
   exdiary-frontend:
-    image: ghcr.io/rwlove/exercisediary-frontend:latest
+    image: ghcr.io/rwlove/workoutdiary-frontend:latest
     restart: unless-stopped
     ports:
       - "8080:8080"

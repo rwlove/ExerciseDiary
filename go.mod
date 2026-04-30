@@ -1,4 +1,4 @@
-module github.com/aceberg/ExerciseDiary
+module github.com/rwlove/WorkoutDiary
 
 go 1.25.0
 
