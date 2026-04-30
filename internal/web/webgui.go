@@ -10,43 +10,16 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/aceberg/ExerciseDiary/internal/auth"
-	"github.com/aceberg/ExerciseDiary/internal/check"
-	"github.com/aceberg/ExerciseDiary/internal/conf"
-	"github.com/aceberg/ExerciseDiary/internal/db"
 	"github.com/aceberg/ExerciseDiary/internal/store"
 )
 
-// Gui starts the monolith (frontend + direct SQLite access on one port).
-// This entry point is unchanged so cmd/ExerciseDiary continues to work as before.
-func Gui(dirPath, nodePath string) {
-	confPath := dirPath + "/config.yaml"
-	check.Path(confPath)
-
-	appConfig, authConf = conf.Get(confPath)
-	appConfig.DirPath = dirPath
-	appConfig.DBPath = dirPath + "/sqlite.db"
-	check.Path(appConfig.DBPath)
-	appConfig.ConfPath = confPath
-	appConfig.NodePath = nodePath
-	appConfig.Icon = icon
-
-	log.Println("INFO: starting web gui with config", appConfig.ConfPath)
-
-	db.Create(appConfig.DBPath)
-
-	s := store.NewSQLite(appConfig.DBPath)
-	startRouter(s, nil, appConfig.Host+":"+appConfig.Port)
-}
-
-// GuiWithStore starts the frontend-only web server backed by a remote API.
-// It is called by cmd/frontend; the monolith never uses this path.
+// GuiWithStore starts the frontend web server backed by a remote API.
 //
 //   - s        – store.APIClient pointing at the backend API
 //   - ac       – the same *store.APIClient for config/auth operations
 //   - port     – the port this frontend process should listen on (e.g. "8080")
-//   - dirPath  – directory that contains config.yaml (theme / color settings)
 //   - nodePath – path to local node_modules (empty = use CDN)
-func GuiWithStore(s store.Store, ac *store.APIClient, port, dirPath, nodePath string) {
+func GuiWithStore(s store.Store, ac *store.APIClient, port, nodePath string) {
 	// Fetch display config (theme, color, etc.) from the API.
 	cfg, err := ac.GetConfig()
 	if err != nil {
@@ -107,6 +80,7 @@ func startRouter(s store.Store, ac *store.APIClient, address string) {
 	router.POST("/set/", auth.Auth(&authConf), setHandler)
 	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)
 
-	err := router.Run(address)
-	check.IfError(err)
+	if err := router.Run(address); err != nil {
+		log.Fatalf("ERROR: router failed: %v", err)
+	}
 }

@@ -1,35 +1,50 @@
 project_name: ExerciseDiary
 builds:
-  - main: ./cmd/ExerciseDiary/
-    binary: exercisediary
-    id: default
+  - id: api
+    main: ./cmd/api/
+    binary: exercisediary-api
     env: [CGO_ENABLED=0]
     goos:
       - linux
       - windows
       - darwin
     goarch:
-      - 386
       - amd64
       - arm
       - arm64
     goarm:
-      - "5"
       - "6"
       - "7"
     ignore:
       - goos: darwin
-        goarch: 386
-      - goos: darwin
         goarch: arm
       - goos: windows
-        goarch: 386
+        goarch: arm
+
+  - id: frontend
+    main: ./cmd/frontend/
+    binary: exercisediary-frontend
+    env: [CGO_ENABLED=0]
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm
+      - arm64
+    goarm:
+      - "6"
+      - "7"
+    ignore:
+      - goos: darwin
+        goarch: arm
       - goos: windows
         goarch: arm
 
 nfpms:
   - maintainer: aceberg <aceberg_a@proton.me>
-    description: Workout diary with GitHub-style year visualization  
+    description: Workout diary with GitHub-style year visualization
     homepage: https://github.com/aceberg/ExerciseDiary
     license: MIT
     section: utils
@@ -39,10 +54,10 @@ nfpms:
     - apk
     - termux.deb
     contents:
-    - src: ./configs/ExerciseDiary.service
-      dst: /lib/systemd/system/ExerciseDiary.service
-    - src: ./configs/ExerciseDiary@.service
-      dst: /lib/systemd/system/ExerciseDiary@.service
+    - src: ./configs/exercisediary-api.service
+      dst: /lib/systemd/system/exercisediary-api.service
+    - src: ./configs/exercisediary-frontend.service
+      dst: /lib/systemd/system/exercisediary-frontend.service
     scripts:
       postinstall: ./configs/postinstall.sh
 
@@ -51,12 +66,6 @@ archives:
     - LICENSE
     - README.md
     - CHANGELOG.md
-    - src: ./configs/ExerciseDiary.service
-      dst: ExerciseDiary.service
-    - src: ./configs/ExerciseDiary@.service
-      dst: ExerciseDiary@.service
-    - src: ./configs/install.sh
-      dst: install.sh
     wrap_in_directory: true
     format_overrides:
     - goos: windows
