@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "ExerciseDiary-Frontend",
+      "runtimeExecutable": "go",
+      "runtimeArgs": ["run", "./cmd/frontend/", "-a", "http://localhost:8851", "-p", "8080"],
+      "port": 8080
+    }
+  ]
+}

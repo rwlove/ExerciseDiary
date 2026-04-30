@@ -8,10 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rwlove/WorkoutDiary/internal/auth"
-	"github.com/rwlove/WorkoutDiary/internal/check"
 	"github.com/rwlove/WorkoutDiary/internal/conf"
 	"github.com/rwlove/WorkoutDiary/internal/db"
-	"github.com/rwlove/WorkoutDiary/internal/migrate"
 	"github.com/rwlove/WorkoutDiary/internal/models"
 	"github.com/rwlove/WorkoutDiary/internal/store"
 )
@@ -22,11 +20,10 @@ var (
 	dataStore store.Store
 )
 
-// Start initialises the database, reads config from environment variables,
-// and begins serving the JSON API.
+// Start reads config from environment variables and begins serving the JSON API.
+// POSTGRES_DSN is required.
 //
-// dataDir is the only required parameter — it sets where the SQLite database
-// lives. All other settings (port, API key, theme, auth, …) are read from
+// All other settings (port, API key, theme, auth, …) are read from
 // environment variables:
 //
 //	PORT        listen port              (default: 8851)
@@ -40,32 +37,23 @@ var (
 //	AUTH_USER   username                 (default: "")
 //	AUTH_PASSWORD bcrypt password        (default: "")
 //	AUTH_EXPIRE session expiry           (default: 7d)
-func Start(dataDir string) {
+func Start() {
 	appConfig, authConf = conf.GetFromEnv()
-	appConfig.DirPath = dataDir
-	appConfig.DBPath = dataDir + "/sqlite.db"
-	// ConfPath left empty — Settings changes are in-memory only in env-var mode.
-	check.Path(appConfig.DBPath)
 
 	apiKey := os.Getenv("API_KEY")
 	postgresDSN := os.Getenv("POSTGRES_DSN")
-
-	if postgresDSN != "" {
-		log.Println("INFO: starting API server with PostgreSQL backend")
-		pgStore, err := store.NewPostgres(postgresDSN)
-		if err != nil {
-			log.Fatalf("ERROR: connect to postgres: %v", err)
-		}
-		if err := db.MigratePostgres(pgStore.Pool()); err != nil {
-			log.Fatalf("ERROR: postgres schema migration: %v", err)
-		}
-		dataStore = pgStore
-		appConfig.PostgresEnabled = true
-	} else {
-		log.Println("INFO: starting API server with SQLite backend, db =", appConfig.DBPath)
-		db.Create(appConfig.DBPath)
-		dataStore = store.NewSQLite(appConfig.DBPath)
+	if postgresDSN == "" {
+		log.Fatal("ERROR: POSTGRES_DSN environment variable is required")
 	}
+
+	pgStore, err := store.NewPostgres(postgresDSN)
+	if err != nil {
+		log.Fatalf("ERROR: connect to postgres: %v", err)
+	}
+	if err := db.MigratePostgres(pgStore.Pool()); err != nil {
+		log.Fatalf("ERROR: postgres schema migration: %v", err)
+	}
+	dataStore = pgStore
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -95,17 +83,14 @@ func Start(dataDir string) {
 	r.PUT("/api/config", putConfig)
 	r.PUT("/api/config/auth", putConfigAuth)
 
-	// Migration (only registered when PostgreSQL is active)
-	if appConfig.PostgresEnabled {
-		r.POST("/api/migrate/sqlite-to-postgres", migrateFromSQLite)
-	}
-
 	address := appConfig.Host + ":" + appConfig.Port
 	log.Println("=================================== ")
 	log.Printf("API server at http://%s", address)
 	log.Println("=================================== ")
 
-	check.IfError(r.Run(address))
+	if err := r.Run(address); err != nil {
+		log.Fatalf("ERROR: server failed: %v", err)
+	}
 }
 
 // ─── middleware ───────────────────────────────────────────────────────────────
@@ -264,22 +249,6 @@ func putConfig(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
-// ─── migration ────────────────────────────────────────────────────────────────
-
-func migrateFromSQLite(c *gin.Context) {
-	pgStore, ok := dataStore.(*store.PostgresStore)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "not using postgres store"})
-		return
-	}
-	result, err := migrate.SQLiteToPostgres(appConfig.DBPath, pgStore)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(http.StatusOK, result)
-}
-
 func putConfigAuth(c *gin.Context) {
 	var body struct {
 		User     string `json:"user"`
@@ -307,4 +276,3 @@ func putConfigAuth(c *gin.Context) {
 	conf.Write(appConfig, authConf)
 	c.Status(http.StatusOK)
 }
-

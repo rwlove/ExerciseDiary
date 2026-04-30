@@ -79,8 +79,6 @@ func startRouter(s store.Store, ac *store.APIClient, address string) {
 	router.POST("/exdel/", auth.Auth(&authConf), deleteExerciseHandler)
 	router.POST("/set/", auth.Auth(&authConf), setHandler)
 	router.POST("/weight/", auth.Auth(&authConf), addWeightHandler)
-	router.POST("/migrate/sqlite-to-postgres", auth.Auth(&authConf), migrateFromSQLiteHandler)
-
 	if err := router.Run(address); err != nil {
 		log.Fatalf("ERROR: router failed: %v", err)
 	}
