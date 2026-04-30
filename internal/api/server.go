@@ -11,6 +11,7 @@ import (
 	"github.com/rwlove/WorkoutDiary/internal/check"
 	"github.com/rwlove/WorkoutDiary/internal/conf"
 	"github.com/rwlove/WorkoutDiary/internal/db"
+	"github.com/rwlove/WorkoutDiary/internal/migrate"
 	"github.com/rwlove/WorkoutDiary/internal/models"
 	"github.com/rwlove/WorkoutDiary/internal/store"
 )
@@ -47,11 +48,24 @@ func Start(dataDir string) {
 	check.Path(appConfig.DBPath)
 
 	apiKey := os.Getenv("API_KEY")
+	postgresDSN := os.Getenv("POSTGRES_DSN")
 
-	log.Println("INFO: starting API server, db =", appConfig.DBPath)
-
-	db.Create(appConfig.DBPath)
-	dataStore = store.NewSQLite(appConfig.DBPath)
+	if postgresDSN != "" {
+		log.Println("INFO: starting API server with PostgreSQL backend")
+		pgStore, err := store.NewPostgres(postgresDSN)
+		if err != nil {
+			log.Fatalf("ERROR: connect to postgres: %v", err)
+		}
+		if err := db.MigratePostgres(pgStore.Pool()); err != nil {
+			log.Fatalf("ERROR: postgres schema migration: %v", err)
+		}
+		dataStore = pgStore
+		appConfig.PostgresEnabled = true
+	} else {
+		log.Println("INFO: starting API server with SQLite backend, db =", appConfig.DBPath)
+		db.Create(appConfig.DBPath)
+		dataStore = store.NewSQLite(appConfig.DBPath)
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
@@ -80,6 +94,11 @@ func Start(dataDir string) {
 	r.GET("/api/config", getConfig)
 	r.PUT("/api/config", putConfig)
 	r.PUT("/api/config/auth", putConfigAuth)
+
+	// Migration (only registered when PostgreSQL is active)
+	if appConfig.PostgresEnabled {
+		r.POST("/api/migrate/sqlite-to-postgres", migrateFromSQLite)
+	}
 
 	address := appConfig.Host + ":" + appConfig.Port
 	log.Println("=================================== ")
@@ -243,6 +262,22 @@ func putConfig(c *gin.Context) {
 	appConfig.PageStep = cfg.PageStep
 	conf.Write(appConfig, authConf)
 	c.Status(http.StatusOK)
+}
+
+// ─── migration ────────────────────────────────────────────────────────────────
+
+func migrateFromSQLite(c *gin.Context) {
+	pgStore, ok := dataStore.(*store.PostgresStore)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "not using postgres store"})
+		return
+	}
+	result, err := migrate.SQLiteToPostgres(appConfig.DBPath, pgStore)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func putConfigAuth(c *gin.Context) {

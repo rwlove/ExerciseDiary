@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -92,4 +93,18 @@ func saveConfigAuth(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusFound, "/config")
+}
+
+func migrateFromSQLiteHandler(c *gin.Context) {
+	if apiClient == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "migration only available in split-service mode"})
+		return
+	}
+	result, err := apiClient.MigrateFromSQLite()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	out, _ := json.Marshal(result)
+	c.Data(http.StatusOK, "application/json", out)
 }

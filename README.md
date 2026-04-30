@@ -70,12 +70,23 @@ Both services are configured exclusively via environment variables. No config fi
 | `PORT` | Listen port | `8851` |
 | `HOST` | Listen address | `0.0.0.0` |
 | `DATA_DIR` | SQLite data directory (also settable via `-d` flag) | `/data/WorkoutDiary` |
+| `POSTGRES_DSN` | PostgreSQL connection string — when set, PostgreSQL is used instead of SQLite | `""` (SQLite) |
 | `API_KEY` | Require this value on every `X-Api-Key` request header; empty = no auth | `""` |
 | `THEME` | Any [Bootswatch](https://bootswatch.com) theme (lowercase) or extras: `emerald`, `grass`, `grayscale`, `ocean`, `sand`, `wood` | `grass` |
 | `COLOR` | Background: `light` or `dark` | `dark` |
 | `HEATCOLOR` | Heatmap cell color | `#03a70c` |
 | `PAGESTEP` | Rows per page | `10` |
 | `TZ` | Timezone | `""` |
+
+#### PostgreSQL
+
+Set `POSTGRES_DSN` to switch the backend from SQLite to PostgreSQL:
+
+```
+POSTGRES_DSN=postgres://user:password@host:5432/workoutdiary
+```
+
+The schema is versioned and managed automatically on startup — no manual `CREATE TABLE` needed. When switching from SQLite, use the **Migrate SQLite → PostgreSQL** button on the Settings page to copy existing data across without data loss.
 
 ### Frontend server (`workoutdiary-frontend`)
 

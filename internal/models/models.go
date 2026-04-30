@@ -8,18 +8,19 @@ import (
 
 // Conf - web gui config
 type Conf struct {
-	Host      string
-	Port      string
-	Theme     string
-	Color     string
-	Icon      string
-	DBPath    string
-	DirPath   string
-	ConfPath  string
-	NodePath  string
-	HeatColor string
-	PageStep  int
-	Auth      bool
+	Host            string
+	Port            string
+	Theme           string
+	Color           string
+	Icon            string
+	DBPath          string
+	DirPath         string
+	ConfPath        string
+	NodePath        string
+	HeatColor       string
+	PageStep        int
+	Auth            bool
+	PostgresEnabled bool // true when the API is backed by PostgreSQL
 }
 
 // Exercise - one exercise
