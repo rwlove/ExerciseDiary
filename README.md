@@ -1,88 +1,104 @@
-[![Main-Docker](https://github.com/aceberg/exercisediary/actions/workflows/main-docker.yml/badge.svg)](https://github.com/aceberg/exercisediary/actions/workflows/main-docker.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aceberg/exercisediary)](https://goreportcard.com/report/github.com/aceberg/exercisediary)
-[![Maintainability](https://api.codeclimate.com/v1/badges/e8f67994120fc7936aeb/maintainability)](https://codeclimate.com/github/aceberg/ExerciseDiary/maintainability)
-![Docker Image Size (latest semver)](https://img.shields.io/docker/image-size/aceberg/exercisediary)
+[![Container Publish](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml/badge.svg)](https://github.com/rwlove/ExerciseDiary/actions/workflows/container-publish.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rwlove/WorkoutDiary)](https://goreportcard.com/report/github.com/rwlove/WorkoutDiary)
 
-<h1><a href="https://github.com/aceberg/exercisediary">
-    <img src="https://raw.githubusercontent.com/aceberg/exercisediary/main/assets/logo.png" width="35" />
-</a>Exercise Diary</h1>
+<h1>Workout Diary</h1>
 
-Workout diary with GitHub-style year visualization
+A modern workout tracking app with GitHub-style heatmap visualization, body weight logging, and per-exercise stats.
 
-- [Quick start](https://github.com/aceberg/exercisediary#quick-start)
-- [Binary](https://github.com/aceberg/exercisediary#binary)
-- [Config](https://github.com/aceberg/exercisediary#config)
-- [Options](https://github.com/aceberg/exercisediary#options)
-- [Local network only](https://github.com/aceberg/exercisediary#local-network-only)
-- [Roadmap](https://github.com/aceberg/ExerciseDiary/blob/main/docs/ROADMAP.md)
-- [Thanks](https://github.com/aceberg/exercisediary#thanks)
-
-
-![Screenshot](https://raw.githubusercontent.com/aceberg/ExerciseDiary/main/assets/Screenshot.png)
+- [Quick start](#quick-start)
+- [Architecture](#architecture)
+- [Configuration](#configuration)
+- [Container images](#container-images)
 
 ## Quick start
 
-```sh
-docker run --name exdiary \
--e "TZ=Asia/Novosibirsk" \
--v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
--p 8851:8851 \
-aceberg/exercisediary
+Run both services with Docker Compose:
+
+```yaml
+services:
+  api:
+    image: ghcr.io/rwlove/workoutdiary-api:latest
+    environment:
+      - DATA_DIR=/data
+      - PORT=8851
+      - API_KEY=changeme
+    volumes:
+      - ./data:/data
+    ports:
+      - "8851:8851"
+
+  frontend:
+    image: ghcr.io/rwlove/workoutdiary-frontend:latest
+    environment:
+      - PORT=8080
+      - API_URL=http://api:8851
+      - API_KEY=changeme
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
 ```
-Or use [docker-compose.yml](docker-compose.yml)
 
-## Binary
-PPA for amd64 .deb is [here](https://github.com/aceberg/ppa). For other binary options plese look at the [latest release](https://github.com/aceberg/ExerciseDiary/releases/latest).
+Then open `http://localhost:8080`.
 
+## Architecture
 
-## Config
+Workout Diary is split into two independent services:
 
+| Service | Binary | Default port | Description |
+| ------- | ------ | ------------ | ----------- |
+| API | `workoutdiary-api` | 8851 | SQLite database + JSON REST API |
+| Frontend | `workoutdiary-frontend` | 8080 | Web UI, proxies data from the API |
 
-Configuration can be done through config file, GUI or environment variables. Variable names is `config.yaml` file are the same, but in lowcase.
+## Configuration
 
-| Variable  | Description | Default |
-| --------  | ----------- | ------- |
-| AUTH | Enable Session-Cookie authentication | false |
-| AUTH_EXPIRE | Session expiration time. A number and suffix: **m, h, d** or **M**. | 7d |
-| AUTH_USER | Username | "" |
-| AUTH_PASSWORD | Encrypted password (bcrypt). [How to encrypt password with bcrypt?](docs/BCRYPT.md) | "" |
-| HOST | Listen address | 0.0.0.0 |
-| PORT   | Port for web GUI | 8851 |
-| THEME | Any theme name from https://bootswatch.com in lowcase or [additional](https://github.com/aceberg/aceberg-bootswatch-fork) (emerald, grass, grayscale, ocean, sand, wood)| grass |
-| COLOR | Background color: light or dark | light |
-| HEATCOLOR | HeatMap color | #03a70c |
-| PAGESTEP | Items on one page | 10 |
-| TZ | Set your timezone for correct time | "" |
+All configuration is done via environment variables — no config files needed.
 
-## Options
+### API service
 
-| Key  | Description | Default | 
-| --------  | ----------- | ------- | 
-| -d | Path to config dir | /data/ExerciseDiary | 
-| -n | Path to local JS and Themes ([node-bootstrap](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap)) | "" | 
+| Variable | Description | Default |
+| -------- | ----------- | ------- |
+| `DATA_DIR` | Directory for the SQLite database | `/data/WorkoutDiary` |
+| `PORT` | Listen port | `8851` |
+| `HOST` | Listen address | `0.0.0.0` |
+| `API_KEY` | Secret key required by the frontend | `""` |
+| `THEME` | Bootswatch theme name | `darkly` |
+| `COLOR` | Background color: `light` or `dark` | `dark` |
+| `HEATCOLOR` | Heatmap accent color (hex) | `#03a70c` |
+| `TZ` | Timezone for correct date handling | `""` |
 
-## Local network only
-By default, this app pulls themes, icons and fonts from the internet. But, in some cases, it may be useful to have an independent from global network setup. I created a separate [image](https://github.com/aceberg/my-dockerfiles/tree/main/node-bootstrap) with all necessary modules and fonts.    
-```sh
-docker run --name node-bootstrap       \
-    -v ~/.dockerdata/icons:/app/icons  \ # For local images
-    -p 8850:8850                       \
-    aceberg/node-bootstrap
+### Frontend service
+
+| Variable | Description | Default |
+| -------- | ----------- | ------- |
+| `PORT` | Listen port | `8080` |
+| `API_URL` | Base URL of the API service | `http://localhost:8851` |
+| `API_KEY` | Must match the API service key | `""` |
+| `NODE_PATH` | Optional URL for local Bootstrap/icons bundle | `""` |
+
+## Container images
+
+Pre-built multi-arch images (amd64, arm64, arm/v7) are published to GHCR on every push to `main` and on version tags:
+
 ```
-```sh
-docker run --name exdiary \
-    -v ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary \
-    -p 8851:8851 \
-    aceberg/exercisediary -n "http://$YOUR_IP:8850"
+ghcr.io/rwlove/workoutdiary-api:latest
+ghcr.io/rwlove/workoutdiary-frontend:latest
 ```
-Or use [docker-compose](docker-compose-local.yml)
 
-## Roadmap
-Moved to [docs/ROADMAP.md](docs/ROADMAP.md)
+## Features
+
+- **Exercise library** — organize exercises into groups, store default weight/reps/intensity per exercise
+- **Daily workout log** — autosaves on every change (no Save button needed)
+- **Body weight tracking** — log weight and view a rolling chart
+- **Heatmap history** — GitHub-style workout intensity and per-exercise color heatmaps
+- **Stats page** — per-exercise intensity charts with period filtering
+- **Dark mode by default** — full Bootstrap dark theme out of the box
+- **PWA support** — installable as a home screen app
 
 ## Thanks
-- All go packages listed in [dependencies](https://github.com/aceberg/exercisediary/network/dependencies)
-- [Bootstrap](https://getbootstrap.com/)
-- Themes: [Free themes for Bootstrap](https://bootswatch.com)
+
+- All Go packages listed in [go.mod](go.mod)
+- [Bootstrap](https://getbootstrap.com/) / [Bootswatch](https://bootswatch.com)
 - [Chart.js](https://github.com/chartjs/Chart.js) and [chartjs-chart-matrix](https://github.com/kurkle/chartjs-chart-matrix)
+- [Gin](https://github.com/gin-gonic/gin)
 - Favicon and logo: [Flaticon](https://www.flaticon.com/icons/)
