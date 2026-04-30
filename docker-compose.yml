@@ -1,15 +1,22 @@
 version: "3"
 services:
-  exdiary:
-    image: aceberg/exercisediary
+  exdiary-api:
+    image: ghcr.io/rwlove/exercisediary-api:latest
     restart: unless-stopped
     ports:
     - 8851:8851
     volumes:
     - ~/.dockerdata/ExerciseDiary:/data/ExerciseDiary
     environment:
-      TZ: Asia/Novosibirsk    # required, default: ""
-      HOST: "0.0.0.0"         # optional, default: 0.0.0.0
-      PORT: "8851"            # optional, default: 8851
-      THEME: "grass"          # optional, default: grass
-      COLOR: "light"          # optional, default: light
+      TZ: America/New_York    # required, default: ""
+
+  exdiary-frontend:
+    image: ghcr.io/rwlove/exercisediary-frontend:latest
+    restart: unless-stopped
+    ports:
+    - 8080:8080
+    command: "-a http://exdiary-api:8851"
+    depends_on:
+      - exdiary-api
+    environment:
+      TZ: America/New_York    # required, default: ""

@@ -22,9 +22,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - image: exercisediary
-            dockerfile: Dockerfile
-            description: "ExerciseDiary monolith (frontend + SQLite in one binary)"
           - image: exercisediary-api
             dockerfile: Dockerfile.api
             description: "ExerciseDiary JSON API backend"
