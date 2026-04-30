@@ -14,7 +14,7 @@ services:
       PORT: "8851"
       HOST: "0.0.0.0"
       THEME: "grass"
-      COLOR: "light"
+      COLOR: "dark"
       HEATCOLOR: "#03a70c"
       PAGESTEP: "10"
       # API_KEY: "changeme"
