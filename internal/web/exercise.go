@@ -64,6 +64,13 @@ func saveExerciseHandler(c *gin.Context) {
 	oneEx.Weight, _ = decimal.NewFromString(c.PostForm("weight"))
 	oneEx.Reps, _ = strconv.Atoi(c.PostForm("reps"))
 
+	// Auto-assign a distinct color if none was provided.
+	if oneEx.Color == "" {
+		if exs, err := dataStore.SelectEx(); err == nil {
+			oneEx.Color = nextExerciseColor(collectColors(exs))
+		}
+	}
+
 	log.Println("ONEEX =", oneEx)
 
 	// Upsert: delete the old record first (ID=0 means new exercise, skip delete)

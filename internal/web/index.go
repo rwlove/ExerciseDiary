@@ -34,6 +34,16 @@ func indexHandler(c *gin.Context) {
 		return
 	}
 
+	// Backfill colors for any exercise that lacks one (one-time operation).
+	if needsColorBackfill(exs) {
+		backfillColors(exs)
+		// Reload so the template sees the updated colors.
+		if refreshed, err := dataStore.SelectEx(); err == nil {
+			exs = refreshed
+			sortExsByFrequency(exs, sets, appConfig.FrequencyDays)
+		}
+	}
+
 	exData.Exs = exs
 	exData.Sets = sets
 	exData.Weight = weights
