@@ -8,6 +8,7 @@ type Store interface {
 	SelectEx() ([]models.Exercise, error)
 	InsertEx(ex models.Exercise) error
 	DeleteEx(id int) error
+	UpdateExColor(id int, color string) error
 
 	SelectSet() ([]models.Set, error)
 	// BulkReplaceSetsByDate atomically replaces all sets for a given date.

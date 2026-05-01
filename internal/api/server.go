@@ -67,6 +67,7 @@ func Start() {
 	r.GET("/api/exercises", getExercises)
 	r.POST("/api/exercises", postExercise)
 	r.PUT("/api/exercises/:id", putExercise)
+	r.PATCH("/api/exercises/:id/color", patchExerciseColor)
 	r.DELETE("/api/exercises/:id", deleteExercise)
 
 	// Sets
@@ -146,6 +147,26 @@ func putExercise(c *gin.Context) {
 		log.Println("WARN putExercise DeleteEx:", err)
 	}
 	if err := dataStore.InsertEx(ex); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusOK)
+}
+
+func patchExerciseColor(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+	var body struct {
+		Color string `json:"color"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := dataStore.UpdateExColor(id, body.Color); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

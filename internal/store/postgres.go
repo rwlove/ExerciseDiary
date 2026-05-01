@@ -73,6 +73,12 @@ func (s *PostgresStore) DeleteEx(id int) error {
 	return err
 }
 
+func (s *PostgresStore) UpdateExColor(id int, color string) error {
+	_, err := s.pool.Exec(context.Background(),
+		"UPDATE exercises SET color = $1 WHERE id = $2", color, id)
+	return err
+}
+
 // ─── sets ─────────────────────────────────────────────────────────────────────
 
 func (s *PostgresStore) SelectSet() ([]models.Set, error) {

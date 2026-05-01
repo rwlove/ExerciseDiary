@@ -104,6 +104,16 @@ func (a *APIClient) DeleteEx(id int) error {
 	return checkStatus(resp)
 }
 
+func (a *APIClient) UpdateExColor(id int, color string) error {
+	resp, err := a.do("PATCH", fmt.Sprintf("/api/exercises/%d/color", id),
+		map[string]string{"color": color})
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	return checkStatus(resp)
+}
+
 func (a *APIClient) SelectSet() ([]models.Set, error) {
 	resp, err := a.do("GET", "/api/sets", nil)
 	if err != nil {
