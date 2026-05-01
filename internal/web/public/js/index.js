@@ -28,7 +28,7 @@ function scheduleAutosave() {
     _saveTimer = setTimeout(saveWorkout, 600);
 }
 
-function addExercise(name, weight, reps, intensity, color) {
+function addExercise(name, weight, reps, color) {
     id++;
     var container = document.getElementById("todayEx");
     var entry = document.createElement('div');
@@ -36,28 +36,37 @@ function addExercise(name, weight, reps, intensity, color) {
     entry.id = 'entry-' + id;
 
     var safeColor = color || '#6c757d';
-    var safeIntensity = (intensity !== undefined && intensity !== '') ? intensity : 5;
+
+    var safeWeight = (weight !== undefined && weight !== '' && weight !== '0') ? weight : '';
+    var safeReps   = (reps   !== undefined && reps   !== '' && reps   !== '0') ? reps   : '';
 
     entry.innerHTML = `
         <div class="entry-color-strip" style="background-color:${safeColor};"></div>
         <input type="hidden" name="name" value="${name}">
-        <input type="hidden" name="weight" value="${weight || 0}">
-        <input type="hidden" name="reps" value="${reps || 0}">
         <span class="entry-name" title="${name}">${name}</span>
         <div class="entry-controls">
-            <span class="entry-label">Intensity</span>
-            <input type="number" class="form-control entry-intensity"
-                name="intensity" value="${safeIntensity}" min="0" max="10">
+            <div class="entry-field">
+                <span class="entry-label">kg</span>
+                <input type="number" class="form-control entry-num" name="weight"
+                    value="${safeWeight}" min="0" step="any" placeholder="—">
+            </div>
+            <div class="entry-field">
+                <span class="entry-label">reps</span>
+                <input type="number" class="form-control entry-num" name="reps"
+                    value="${safeReps}" min="0" placeholder="—">
+            </div>
             <input type="color" class="entry-color-picker"
-                name="workout_color" value="${safeColor}"
-                oninput="this.previousElementSibling.previousElementSibling.previousElementSibling.previousElementSibling.style.backgroundColor=this.value">
-            <button type="button" class="entry-del-btn"
-                onclick="document.getElementById('entry-${id}').remove(); updateEmptyState();"
-                title="Remove">
+                name="workout_color" value="${safeColor}">
+            <button type="button" class="entry-del-btn" title="Remove">
                 <i class="bi bi-x-lg"></i>
             </button>
         </div>
     `;
+
+    // Wire up weight/reps inputs → autosave
+    entry.querySelectorAll('.entry-num').forEach(function(inp) {
+        inp.addEventListener('change', scheduleAutosave);
+    });
 
     // Wire up color picker → color strip live update + autosave
     var strip = entry.querySelector('.entry-color-strip');
@@ -66,10 +75,6 @@ function addExercise(name, weight, reps, intensity, color) {
         strip.style.backgroundColor = this.value;
         scheduleAutosave();
     });
-    colorPicker.removeAttribute('oninput');
-
-    // Wire intensity input → autosave
-    entry.querySelector('.entry-intensity').addEventListener('change', scheduleAutosave);
 
     // Wire delete button → autosave
     entry.querySelector('.entry-del-btn').addEventListener('click', function() {
@@ -77,8 +82,6 @@ function addExercise(name, weight, reps, intensity, color) {
         updateEmptyState();
         scheduleAutosave();
     });
-    // Remove inline onclick so the event listener handles it
-    entry.querySelector('.entry-del-btn').removeAttribute('onclick');
 
     container.appendChild(entry);
     updateEmptyState();
@@ -98,20 +101,10 @@ function setFormContent(sets, date) {
     document.getElementById("formDate").value = date;
     document.getElementById("realDate").value = date;
 
-    // Update heatmap highlights
-    if (window.intensityChart) {
-        window.intensityChart.data.datasets[0].selectedDate = date;
-        window.intensityChart.update();
-    }
-    if (window.colorChart) {
-        window.colorChart.data.datasets[0].selectedDate = date;
-        window.colorChart.update();
-    }
-
     if (sets) {
         for (var i = 0; i < sets.length; i++) {
             if (sets[i].Date == date) {
-                addExercise(sets[i].Name, sets[i].Weight, sets[i].Reps, sets[i].Intensity, sets[i].WorkoutColor);
+                addExercise(sets[i].Name, sets[i].Weight, sets[i].Reps, sets[i].WorkoutColor);
             }
         }
     }
@@ -135,11 +128,6 @@ function setWeightDate() {
     document.getElementById("weightDate").value = date;
 }
 
-function delExercise(exID) {
-    document.getElementById(exID).remove();
-    updateEmptyState();
-}
-
 function moveDayLeftRight(where, sets) {
     var dateStr = document.getElementById("realDate").value;
     var year  = dateStr.substring(0, 4);
@@ -155,7 +143,7 @@ function addAllGroup(exs, gr) {
     if (!exs) return;
     for (var i = 0; i < exs.length; i++) {
         if (exs[i].Group == gr) {
-            addExercise(exs[i].Name, exs[i].Weight, exs[i].Reps, exs[i].Intensity, exs[i].Color);
+            addExercise(exs[i].Name, exs[i].Weight, exs[i].Reps, exs[i].Color);
         }
     }
 }
@@ -163,12 +151,10 @@ function addAllGroup(exs, gr) {
 function selectGroup(gr) {
     window._selectedGroup = gr;
 
-    // Highlight active chip
     document.querySelectorAll('.group-chip').forEach(function(chip) {
         chip.classList.toggle('active', chip.getAttribute('data-group') === gr);
     });
 
-    // Show group header, hide "no group" state
     var header = document.getElementById('groupHeader');
     var noGroup = document.getElementById('noGroupState');
     var searchInput = document.getElementById('exSearch');
@@ -179,7 +165,6 @@ function selectGroup(gr) {
     if (noGroup) noGroup.style.display = 'none';
     if (searchInput) searchInput.value = '';
 
-    // Show only items in this group
     document.querySelectorAll('.exercise-item').forEach(function(item) {
         item.style.display = item.getAttribute('data-group') === gr ? '' : 'none';
     });
@@ -188,12 +173,10 @@ function selectGroup(gr) {
 function clearGroup() {
     window._selectedGroup = null;
 
-    // Deactivate all chips
     document.querySelectorAll('.group-chip').forEach(function(chip) {
         chip.classList.remove('active');
     });
 
-    // Hide group header, show "no group" state, hide all exercises
     var header = document.getElementById('groupHeader');
     var noGroup = document.getElementById('noGroupState');
     if (header) header.style.display = 'none';

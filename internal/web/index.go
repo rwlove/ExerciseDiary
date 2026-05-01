@@ -42,9 +42,7 @@ func indexHandler(c *gin.Context) {
 	guiData.ExData = exData
 	guiData.GroupMap = createGroupMap()
 
-	heatmaps := generateHeatMap(exData.Sets)
-	guiData.IntensityHeatMap = heatmaps.IntensityMap
-	guiData.ColorHeatMap = heatmaps.ColorMap
+	guiData.ColorHeatMap = generateHeatMap(exData.Sets)
 
 	sortExsByFrequency(guiData.ExData.Exs, sets, appConfig.FrequencyDays)
 	sort.Slice(guiData.ExData.Weight, func(i, j int) bool {

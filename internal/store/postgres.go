@@ -11,8 +11,6 @@ import (
 )
 
 // PostgresStore implements Store using a PostgreSQL connection pool.
-// All weight and date columns are cast to/from text to preserve decimal
-// precision and keep the same string format used by the rest of the app.
 type PostgresStore struct {
 	pool *pgxpool.Pool
 }
@@ -40,7 +38,7 @@ func (s *PostgresStore) Pool() *pgxpool.Pool {
 
 func (s *PostgresStore) SelectEx() ([]models.Exercise, error) {
 	rows, err := s.pool.Query(context.Background(),
-		`SELECT id, gr, place, name, descr, image, color, weight::text, reps, intensity
+		`SELECT id, gr, place, name, descr, image, color, weight::text, reps
 		 FROM exercises ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
@@ -52,7 +50,7 @@ func (s *PostgresStore) SelectEx() ([]models.Exercise, error) {
 		var ex models.Exercise
 		var weightStr string
 		if err := rows.Scan(&ex.ID, &ex.Group, &ex.Place, &ex.Name, &ex.Descr,
-			&ex.Image, &ex.Color, &weightStr, &ex.Reps, &ex.Intensity); err != nil {
+			&ex.Image, &ex.Color, &weightStr, &ex.Reps); err != nil {
 			return nil, err
 		}
 		ex.Weight, _ = decimal.NewFromString(weightStr)
@@ -63,10 +61,10 @@ func (s *PostgresStore) SelectEx() ([]models.Exercise, error) {
 
 func (s *PostgresStore) InsertEx(ex models.Exercise) error {
 	_, err := s.pool.Exec(context.Background(),
-		`INSERT INTO exercises (gr, place, name, descr, image, color, weight, reps, intensity)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+		`INSERT INTO exercises (gr, place, name, descr, image, color, weight, reps)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		ex.Group, ex.Place, ex.Name, ex.Descr, ex.Image, ex.Color,
-		ex.Weight.String(), ex.Reps, ex.Intensity)
+		ex.Weight.String(), ex.Reps)
 	return err
 }
 
@@ -79,7 +77,7 @@ func (s *PostgresStore) DeleteEx(id int) error {
 
 func (s *PostgresStore) SelectSet() ([]models.Set, error) {
 	rows, err := s.pool.Query(context.Background(),
-		`SELECT id, date::text, name, color, workout_color, weight::text, reps, intensity
+		`SELECT id, date::text, name, color, workout_color, weight::text, reps
 		 FROM sets ORDER BY id ASC`)
 	if err != nil {
 		return nil, err
@@ -91,7 +89,7 @@ func (s *PostgresStore) SelectSet() ([]models.Set, error) {
 		var set models.Set
 		var weightStr string
 		if err := rows.Scan(&set.ID, &set.Date, &set.Name, &set.Color,
-			&set.WorkoutColor, &weightStr, &set.Reps, &set.Intensity); err != nil {
+			&set.WorkoutColor, &weightStr, &set.Reps); err != nil {
 			return nil, err
 		}
 		set.Weight, _ = decimal.NewFromString(weightStr)
@@ -114,10 +112,10 @@ func (s *PostgresStore) BulkReplaceSetsByDate(date string, sets []models.Set) er
 
 	for _, set := range sets {
 		if _, err := tx.Exec(ctx,
-			`INSERT INTO sets (date, name, color, workout_color, weight, reps, intensity)
-			 VALUES ($1::date, $2, $3, $4, $5, $6, $7)`,
+			`INSERT INTO sets (date, name, color, workout_color, weight, reps)
+			 VALUES ($1::date, $2, $3, $4, $5, $6)`,
 			set.Date, set.Name, set.Color, set.WorkoutColor,
-			set.Weight.String(), set.Reps, set.Intensity); err != nil {
+			set.Weight.String(), set.Reps); err != nil {
 			return err
 		}
 	}
