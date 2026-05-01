@@ -53,6 +53,14 @@ CREATE TABLE IF NOT EXISTS weight (
 );
 `,
 	},
+	{
+		Version:     2,
+		Description: "drop intensity columns",
+		SQL: `
+ALTER TABLE exercises DROP COLUMN IF EXISTS intensity;
+ALTER TABLE sets DROP COLUMN IF EXISTS intensity;
+`,
+	},
 }
 
 // MigratePostgres creates the schema_version table if needed and applies any

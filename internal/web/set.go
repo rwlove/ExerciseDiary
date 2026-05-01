@@ -26,7 +26,6 @@ func setHandler(c *gin.Context) {
 		oneSet.Name = formMap["name"][i]
 		oneSet.Weight, _ = decimal.NewFromString(formMap["weight"][i])
 		oneSet.Reps, _ = strconv.Atoi(formMap["reps"][i])
-		oneSet.Intensity, _ = strconv.Atoi(formMap["intensity"][i])
 		if wc, ok := formMap["workout_color"]; ok && i < len(wc) {
 			oneSet.WorkoutColor = wc[i]
 		} else {

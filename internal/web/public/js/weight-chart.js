@@ -3,19 +3,17 @@ var wChart = null;
 function splitWeight(weight, show) {
     var dates = [];
     var ws = [];
-
-    weight = weight.slice(show)
-    let arrayLength = weight.length;
-    for (let i = 0 ; i < arrayLength; i++) {
+    weight = weight.slice(show);
+    for (let i = 0; i < weight.length; i++) {
         dates.push(weight[i].Date);
         ws.push(weight[i].Weight);
     }
-    // console.log('LDATA =', dates, ws);
     return { dates, ws };
-};
+}
 
 function weightChart(id, dates, ws, wcolor, xticks) {
     const ctx = document.getElementById(id);
+    if (!ctx) return;
 
     if (wChart) {
         wChart.clear();
@@ -40,32 +38,19 @@ function weightChart(id, dates, ws, wcolor, xticks) {
         options: {
             responsive: true,
             scales: {
-                x: {
-                    display: xticks,
-                    grid: {
-                        display: false
-                    }
-                },
-                y: {
-                    beginAtZero: false,
-                    grid: {
-                        display: false
-                    }
-                }
+                x: { display: xticks, grid: { display: false } },
+                y: { beginAtZero: false, grid: { display: false } }
             },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
+            plugins: { legend: { display: false } }
         }
     });
 }
 
-function generateWeightChart(weight, wcolor, show) {
-  if (weight) {
-    let { dates, ws } = splitWeight(weight, show);
-
-    weightChart('weight-chart', dates, ws, wcolor, false);
-  };
-};
+// generateWeightChart renders a weight line chart.
+// canvasId defaults to 'weight-chart' if not provided.
+function generateWeightChart(weight, wcolor, show, canvasId) {
+    if (!weight) return;
+    var id = canvasId || 'weight-chart';
+    var { dates, ws } = splitWeight(weight, show);
+    weightChart(id, dates, ws, wcolor, false);
+}

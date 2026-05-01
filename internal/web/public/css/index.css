@@ -452,8 +452,15 @@
   white-space: nowrap;
 }
 
-.entry-intensity {
-  width: 58px;
+.entry-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.entry-num {
+  width: 64px;
   text-align: center;
   padding: 4px 6px;
   font-size: 0.875rem;
@@ -540,6 +547,21 @@
   .horiz-scroll {
     direction: rtl;
   }
+}
+
+/* ─── Stats page tab bar (no date-nav-bar above it) ─────────────────────── */
+
+.stats-tabs-bar {
+  background: var(--bs-body-bg);
+  border-bottom: 1px solid var(--bs-border-color);
+  padding: 0;
+  position: sticky;
+  top: 54px; /* just below navbar */
+  z-index: 190;
+}
+
+@media all and (display-mode: standalone) {
+  .stats-tabs-bar { top: 0; }
 }
 
 /* ─── PWA overrides ──────────────────────────────────────────────────────── */
