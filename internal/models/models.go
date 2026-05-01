@@ -8,16 +8,17 @@ import (
 
 // Conf - web gui config
 type Conf struct {
-	Host      string
-	Port      string
-	Theme     string
-	Color     string
-	Icon      string
-	ConfPath  string
-	NodePath  string
-	HeatColor string
-	PageStep  int
-	Auth      bool
+	Host          string
+	Port          string
+	Theme         string
+	Color         string
+	Icon          string
+	ConfPath      string
+	NodePath      string
+	HeatColor     string
+	PageStep      int
+	FrequencyDays int // days to look back when sorting exercises by usage frequency
+	Auth          bool
 }
 
 // Exercise - one exercise

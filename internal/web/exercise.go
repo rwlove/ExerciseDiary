@@ -21,11 +21,19 @@ func exerciseHandler(c *gin.Context) {
 		c.Status(http.StatusInternalServerError)
 		return
 	}
+	sets, err := dataStore.SelectSet()
+	if err != nil {
+		log.Println("ERROR exerciseHandler SelectSet:", err)
+		c.Status(http.StatusInternalServerError)
+		return
+	}
 	exData.Exs = exs
 
 	guiData.Config = appConfig
 	guiData.ExData = exData
 	guiData.GroupMap = createGroupMap()
+
+	sortExsByFrequency(guiData.ExData.Exs, sets, appConfig.FrequencyDays)
 
 	idStr, ok := c.GetQuery("id")
 	if ok && idStr != "new" {

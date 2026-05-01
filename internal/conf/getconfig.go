@@ -19,6 +19,7 @@ func GetFromEnv() (config models.Conf, authConf auth.Conf) {
 	v.SetDefault("COLOR", "dark")
 	v.SetDefault("HEATCOLOR", "#03a70c")
 	v.SetDefault("PAGESTEP", 10)
+	v.SetDefault("FREQUENCY_DAYS", 30)
 	v.SetDefault("AUTH_EXPIRE", "7d")
 
 	v.AutomaticEnv()
@@ -29,6 +30,7 @@ func GetFromEnv() (config models.Conf, authConf auth.Conf) {
 	config.Color = v.GetString("COLOR")
 	config.HeatColor = v.GetString("HEATCOLOR")
 	config.PageStep = v.GetInt("PAGESTEP")
+	config.FrequencyDays = v.GetInt("FREQUENCY_DAYS")
 
 	authConf.Auth = v.GetBool("AUTH")
 	authConf.User = v.GetString("AUTH_USER")
@@ -57,6 +59,7 @@ func Write(config models.Conf, authConf auth.Conf) {
 	v.Set("color", config.Color)
 	v.Set("heatcolor", config.HeatColor)
 	v.Set("pagestep", config.PageStep)
+	v.Set("frequency_days", config.FrequencyDays)
 
 	v.Set("auth", authConf.Auth)
 	v.Set("auth_user", authConf.User)

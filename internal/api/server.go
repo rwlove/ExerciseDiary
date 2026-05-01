@@ -245,6 +245,7 @@ func putConfig(c *gin.Context) {
 	appConfig.Color = cfg.Color
 	appConfig.HeatColor = cfg.HeatColor
 	appConfig.PageStep = cfg.PageStep
+	appConfig.FrequencyDays = cfg.FrequencyDays
 	conf.Write(appConfig, authConf)
 	c.Status(http.StatusOK)
 }

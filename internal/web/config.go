@@ -33,12 +33,11 @@ func configHandler(c *gin.Context) {
 }
 
 func saveConfigHandler(c *gin.Context) {
-	appConfig.Host = c.PostForm("host")
-	appConfig.Port = c.PostForm("port")
 	appConfig.Theme = c.PostForm("theme")
 	appConfig.Color = c.PostForm("color")
 	appConfig.HeatColor = c.PostForm("heatcolor")
 	appConfig.PageStep, _ = strconv.Atoi(c.PostForm("pagestep"))
+	appConfig.FrequencyDays, _ = strconv.Atoi(c.PostForm("frequencydays"))
 
 	if apiClient != nil {
 		// Split-frontend: persist config via API

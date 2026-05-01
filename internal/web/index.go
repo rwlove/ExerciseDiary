@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"sort"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -45,9 +46,7 @@ func indexHandler(c *gin.Context) {
 	guiData.IntensityHeatMap = heatmaps.IntensityMap
 	guiData.ColorHeatMap = heatmaps.ColorMap
 
-	sort.Slice(guiData.ExData.Exs, func(i, j int) bool {
-		return guiData.ExData.Exs[i].Place < guiData.ExData.Exs[j].Place
-	})
+	sortExsByFrequency(guiData.ExData.Exs, sets, appConfig.FrequencyDays)
 	sort.Slice(guiData.ExData.Weight, func(i, j int) bool {
 		return guiData.ExData.Weight[i].Date < guiData.ExData.Weight[j].Date
 	})
@@ -66,4 +65,23 @@ func createGroupMap() map[string]string {
 		}
 	}
 	return grMap
+}
+
+// sortExsByFrequency sorts exs in-place by how many times each was used in
+// the last `days` days (descending). Ties are broken by exercise Place field.
+func sortExsByFrequency(exs []models.Exercise, sets []models.Set, days int) {
+	cutoff := time.Now().AddDate(0, 0, -days).Format("2006-01-02")
+	count := make(map[string]int, len(exs))
+	for _, s := range sets {
+		if s.Date >= cutoff {
+			count[s.Name]++
+		}
+	}
+	sort.SliceStable(exs, func(i, j int) bool {
+		ci, cj := count[exs[i].Name], count[exs[j].Name]
+		if ci != cj {
+			return ci > cj
+		}
+		return exs[i].Place < exs[j].Place
+	})
 }
