@@ -12,7 +12,7 @@
             <form action="/config/" method="post">
                 <tr>
                     <td>Theme</td>
-                    <td><select name="theme" class="form-select">
+                    <td><select name="theme" id="themeSelect" class="form-select" onchange="previewTheme(this.value)">
                         <option selected>{{ .Config.Theme }}</option>
                         {{ range .Themes }}
                             <option value="{{ . }}">{{ . }}</option>
@@ -110,40 +110,15 @@
     </div>
 
 <script>
-function runMigration() {
-    var btn = document.getElementById('migrateBtn');
-    var result = document.getElementById('migrateResult');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Migrating…';
-    result.style.display = 'none';
+var _themeLink = document.getElementById('bootstrap-theme-link');
 
-    fetch('/migrate/sqlite-to-postgres', { method: 'POST' })
-        .then(function(r) { return r.json().then(function(body) { return { ok: r.ok, body: body }; }); })
-        .then(function(r) {
-            if (r.ok) {
-                result.className = 'alert alert-success mt-3';
-                result.innerHTML = '<i class="bi bi-check-circle me-2"></i>Migration complete — ' +
-                    r.body.exercises + ' exercises, ' +
-                    r.body.sets + ' sets, ' +
-                    r.body.weight + ' weight records.';
-            } else {
-                result.className = 'alert alert-danger mt-3';
-                result.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>Error: ' + (r.body.error || 'unknown error');
-            }
-            result.style.display = '';
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-arrow-right-circle me-2"></i>Migrate SQLite → PostgreSQL';
-        })
-        .catch(function(err) {
-            result.className = 'alert alert-danger mt-3';
-            result.innerHTML = '<i class="bi bi-exclamation-triangle me-2"></i>' + err;
-            result.style.display = '';
-            btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-arrow-right-circle me-2"></i>Migrate SQLite → PostgreSQL';
-        });
+function previewTheme(theme) {
+    if (!_themeLink) return;
+    var current = _themeLink.href;
+    // Replace the theme segment in the URL (works for both CDN and node paths)
+    _themeLink.href = current.replace(/\/dist\/[^/]+\/bootstrap/, '/dist/' + theme + '/bootstrap');
 }
 </script>
-        
 
 {{ template "footer.html" }}
 {{ end }}
